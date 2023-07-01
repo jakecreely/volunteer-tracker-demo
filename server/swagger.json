@@ -1,0 +1,1047 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Volunteer Tracker API 3.0",
+    "description": "This is the documentation for the backend server feeding the volunteer tracker for matthew's house",
+    "contact": {
+      "email": "jakecreely@gmail.com"
+    },
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://oyster-app-dt6ed.ondigitalocean.app/api"
+    },
+    {
+      "url": "http://localhost:4000"
+    }
+  ],
+  "tags": [
+    {
+      "name": "volunteers",
+      "description": "Everything about volunteer(s)"
+    },
+    {
+      "name": "awards",
+      "description": "Access the awards a volunteer can achieve"
+    },
+    {
+      "name": "training",
+      "description": "The training a volunteer can complete"
+    },
+    {
+      "name": "documents",
+      "description": "The documents a volunteer needs"
+    },
+    {
+      "name": "roles",
+      "description": "The roles a volunteer can have"
+    }
+  ],
+  "paths": {
+    "/volunteers": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Get all volunteers",
+        "description": "Get all volunteers",
+        "operationId": "getVolunteers",
+        "responses": {
+          "200": {
+            "description": "Volunteers fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormattedVolunteer"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormattedVolunteer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error fetching volunteers"
+          }
+        }
+      }
+    },
+    "/volunteers/{id}": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Get a volunteer",
+        "description": "Get a  volunteer by Id",
+        "operationId": "getVolunteerById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of volunteer to return",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Volunteer fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormattedVolunteer"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormattedVolunteer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied"
+          },
+          "404": {
+            "description": "Volunteer not be found with given ID"
+          }
+        }
+      }
+    },
+    "/volunteers/outstanding-documents": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Gets all the outstanding documents",
+        "description": "Get the outstanding documents of all the volunteers",
+        "operationId": "getOutstandingDocuments",
+        "responses": {
+          "200": {
+            "description": "Volunteers fetched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "example": "Jake Creely"
+                      },
+                      "documents": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "ObjectId",
+                              "example": "641d6d0da70818777be9af87"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Photo Consent"
+                            },
+                            "provided": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error fetching outstanding documents"
+          }
+        }
+      }
+    },
+    "/volunteers/birthdays/upcoming/{noOfDays}": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "NEEDS TO BE FORMATTED Gets a list of volunteers with upcoming birthdays",
+        "description": "Gets an array of volunteers who have birthdays within the specified upcoming number of days",
+        "operationId": "getUpcomingBirthdays",
+        "parameters": [
+          {
+            "name": "noOfDays",
+            "in": "path",
+            "description": "The number of days to look ahead for birthdays",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Birthdays returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormattedVolunteer"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Number of days must be a positive integer"
+          },
+          "500": {
+            "description": "Server Error could not fetch upcoming birthdays"
+          }
+        }
+      }
+    },
+    "/volunteers/create": {
+      "post": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Creates a new volunteer",
+        "description": "Creates a new volunteer using the data passes in the request body",
+        "operationId": "createVolunteer",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Volunteer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Volunteer created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Volunteer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error Creating Volunteer"
+          }
+        }
+      }
+    },
+    "/volunteers/update/{id}": {
+      "put": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Updates volunteers by id",
+        "description": "Updates an existing volunteer using the data passed in the request body",
+        "operationId": "updateVolunteer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the volunteer to be updated",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ObjectId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FormattedVolunteer"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Volunteer updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormattedVolunteer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID is not in the ObjectId format"
+          },
+          "404": {
+            "description": "No volunteers with given id"
+          },
+          "500": {
+            "description": "Server Error Updating Volunteer"
+          }
+        }
+      }
+    },
+    "/volunteers/delete/{id}": {
+      "delete": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Deletes volunteers by id",
+        "description": "Deletes volunteer with the given id",
+        "operationId": "deleteVolunteer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Id of the volunteer to be deleted",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "ObjectId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Volunteer Deleted Successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FormattedVolunteer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ID is not in the ObjectId format"
+          },
+          "404": {
+            "description": "No volunteers with given id"
+          },
+          "500": {
+            "description": "Server Error Deleting Volunteer"
+          }
+        }
+      }
+    },
+    "/volunteers/training/upcoming/{days}": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "Gets upcoming volunteer training within time frame",
+        "description": "Gets all the upcoming training with the specified time for all volunteers",
+        "operationId": "getUpcomingTraining",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "path",
+            "description": "Number of days to look ahead during check (if not specified then assumed to be 0)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming Volunteers Training Overdue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "volunteer": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "63d3b1cf53d7065ff14ebfe5"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Jake Creely"
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "training": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "63d3b1cf53d7065ff14ebfe5"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Food Hygiene"
+                            },
+                            "dateCompleted": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "stillValid": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Number of days must be a positive integer"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/volunteers/awards/upcoming/{days}": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "VOLUNTEER DATA SHOULD BE THE SAME FOR BOTH TRAINING AND AWARDS?Gets upcoming volunteer awards within time frame",
+        "description": "Gets all the upcoming awards with the specified time for all volunteers",
+        "operationId": "getUpcomingAwards",
+        "parameters": [
+          {
+            "name": "days",
+            "required": true,
+            "in": "path",
+            "description": "Number of days to look ahead during check (if not specified then assumed to be 0)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming Volunteers Awards",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "volunteer": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "63d3b1cf53d7065ff14ebfe5"
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Jake Creely"
+                          },
+                          "archived": {
+                            "type": "boolean"
+                          },
+                          "startDate": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "timeOut": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "awards": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "example": "63d3b1cf53d7065ff14ebfe5"
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Mug"
+                            },
+                            "length": {
+                              "type": "string",
+                              "example": 12
+                            },
+                            "dateAchieved": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "dateGiven": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "given": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Number of days must be a positive integer"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/volunteers/{id}/awards/upcoming/{days}": {
+      "get": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "NEED TO ADD ERROR HANDLING Gets upcoming awards of a specific volunteer",
+        "description": "Gets the volunteers upcoming awards with the specified time",
+        "operationId": "getUpcomingAwardsById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Id of the volunteer to check",
+            "schema": {
+              "type": "string",
+              "format": "ObjectID"
+            }
+          },
+          {
+            "name": "days",
+            "required": true,
+            "in": "path",
+            "description": "Number of days to look ahead during check (if not specified then assumed to be 0)",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Upcoming Volunteer Awards",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "63d3b1cf53d7065ff14ebfe5"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Mug"
+                      },
+                      "length": {
+                        "type": "string",
+                        "example": 12
+                      },
+                      "dateAchieved": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "dateGiven": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "given": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Number of days must be a positive integer"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/volunteers/awards/update": {
+      "put": {
+        "tags": [
+          "volunteers"
+        ],
+        "summary": "NEED TO OUTPUT ALL UPDATED VOLUNTEERS NOT JUST ONE Updates all volunteers awards",
+        "description": "Updates all volunteer awards to see if any are due or still not given",
+        "operationId": "updateVolunteerAwards",
+        "responses": {
+          "200": {
+            "description": "Updated Volunteers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "not been added yet"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not find volunteer with given id"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Volunteer": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "example": "507f1f77bcf86cd799439011"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jake Creely"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeOut": {
+            "type": "integer",
+            "example": 10
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "roleId": {
+                  "type": "string",
+                  "format": "ObjectId",
+                  "example": "507f1f77bcf86cd799439011"
+                },
+                "documents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "documentId": {
+                        "type": "string",
+                        "format": "ObjectId",
+                        "example": "507f1f77bcf86cd799439011"
+                      },
+                      "provided": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "awards": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "awardId": {
+                        "type": "string",
+                        "format": "ObjectId",
+                        "example": "507f1f77bcf86cd799439011"
+                      },
+                      "dateAchieved": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "dateGiven": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "given": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "training": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "trainingId": {
+                        "type": "string",
+                        "format": "ObjectId",
+                        "example": "507f1f77bcf86cd799439011"
+                      },
+                      "dateCompleted": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "stillValid": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "FormattedVolunteer": {
+        "type": "object",
+        "required": [
+          "_id",
+          "name",
+          "startDate",
+          "birthday",
+          "timeOut",
+          "archived",
+          "roles"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "example": "ObjectId(\"507f1f77bcf86cd799439011\")"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jake Creely"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "1970-08-20T00:00:00.000Z"
+          },
+          "birthday": {
+            "type": "string",
+            "format": "date-time",
+            "example": "1970-08-20T00:00:00.000Z"
+          },
+          "timeOut": {
+            "type": "integer",
+            "description": "Number of days the volunteer has had a break"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Whether the volunteer is still active"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "ObjectId",
+                  "example": "ObjectId(\"507f1f77bcf86cd799439012\")"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Tuesdays"
+                }
+              }
+            }
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "provided"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "ObjectId",
+                  "example": "ObjectId(\"507f1f77bcf86cd799439012\")"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Photo Consent"
+                },
+                "provided": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "awards": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "length",
+                "dateAchieved",
+                "dateGiven",
+                "given"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "ObjectId",
+                  "example": "ObjectId(\"507f1f77bcf86cd799439012\")"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "T-Shirt"
+                },
+                "length": {
+                  "type": "integer",
+                  "example": 12
+                },
+                "dateAchieved": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "dateGiven": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "given": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "training": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "length",
+                "dateCompleted",
+                "stillValid"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "ObjectId",
+                  "example": "ObjectId(\"507f1f77bcf86cd799439012\")"
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Food Hygiene"
+                },
+                "length": {
+                  "type": "integer",
+                  "example": 3
+                },
+                "dateCompleted": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "stillValid": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Award": {
+        "type": "object",
+        "required": [
+          "_id",
+          "name",
+          "length"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "length": {
+            "type": "integer",
+            "description": "Length of services (in months) to achieve award"
+          }
+        },
+        "xml": {
+          "name": "award"
+        }
+      },
+      "Role": {
+        "type": "object",
+        "required": [
+          "_id",
+          "name"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Admin"
+          }
+        },
+        "xml": {
+          "name": "role"
+        }
+      },
+      "Document": {
+        "type": "object",
+        "required": [
+          "_id",
+          "name"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Photo Consent"
+          }
+        }
+      },
+      "Training": {
+        "type": "object",
+        "required": [
+          "_id",
+          "name"
+        ],
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId"
+          },
+          "name": {
+            "type": "string",
+            "example": "Food Hygiene"
+          },
+          "length": {
+            "type": "integer",
+            "example": 3
+          }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "xml": {
+          "name": "##default"
+        }
+      }
+    },
+    "requestBodies": {
+      "Pet": {
+        "description": "Pet object that needs to be added to the store",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          },
+          "application/xml": {
+            "schema": {
+              "$ref": "#/components/schemas/Pet"
+            }
+          }
+        }
+      },
+      "UserArray": {
+        "description": "List of user object",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/User"
+              }
+            }
+          }
+        }
+      },
+      "api_key": {
+        "type": "apiKey",
+        "name": "api_key",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}
