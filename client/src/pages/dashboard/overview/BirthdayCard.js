@@ -84,10 +84,14 @@ export default function BirthdayCard(props) {
               </Table>
             </TableContainer>
             :
+            <Box paddingTop={2}>
             <UpcomingEmpty message="No Upcoming Birthdays" />
+            </Box>
           )
           :
+          <Box p={2}>
           <LoadingTableSkeleton />
+          </Box>
         }
       </React.Fragment>
     );
