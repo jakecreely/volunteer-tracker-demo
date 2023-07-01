@@ -107,24 +107,34 @@ volunteerSchema.statics.findOutstandingDocuments = async function (documents) {
 volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
 
   if (daysThreshold < 0) {
-    throw new Error("daysThreshold must be greater than or equal 0")
+    throw new Error("daysThreshold must be greater than or equal to 0")
   }
-
+  
   const today = moment()
   const upcoming = moment().add(daysThreshold, 'days')
-
+  
   let volunteers = await this.find({}).select('_id name birthday').exec()
-
+  
   let upcomingBirthdays = volunteers.filter(volunteer => {
     const birthday = moment(volunteer.birthday).set('year', today.year())
-    return (birthday.isAfter(today) && birthday.isBefore(upcoming))
-  })
+  
+    // True if birthday is in the same years and is between today and upcoming
+    var isBetween = birthday.isBetween(today, upcoming, null, '[]')
 
+    // If upcoming is next year and birthday has not been found yet
+    if (upcoming.year() > today.year() && !isBetween) {
+      birthday.set('year', today.year() + 1);
+      isBetween = birthday.isBetween(today, upcoming, null, '[]')
+    }
+
+    return isBetween;
+  });
+  
   let sortedBirthdays = upcomingBirthdays.sort((a, b) => {
     const birthdayA = moment(a.birthday).set('year', today.year())
     const birthdayB = moment(b.birthday).set('year', today.year())
-    return (birthdayA.isBefore(birthdayB) ? -1 : 1)
-  })
+    return birthdayA.isBefore(birthdayB) ? -1 : 1;
+  });
 
   return sortedBirthdays
 }

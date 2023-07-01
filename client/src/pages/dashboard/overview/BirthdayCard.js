@@ -11,6 +11,7 @@ import { FormControl, MenuItem, InputLabel, Select } from '@mui/material'
 import { Box } from '@mui/system';
 import { useGetUpcomingVolunteerBirthdaysQuery } from '../../../features/api/apiSlice.js';
 import { UpcomingEmpty } from '../../../components/Empty.js';
+import { LoadingTableSkeleton } from '../LoadingTableSkeleton.js';
 
 export default function BirthdayCard(props) {
 
@@ -31,12 +32,6 @@ export default function BirthdayCard(props) {
     e.preventDefault()
     props.handleBirthdaySubmit(e)
   }
-
-  if (upcomingBirthdaysLoading) 
-  return (
-    <div>
-      Loading Birthdays...
-    </div>)
 
   if (props.birthdayLength) {
     return (
@@ -59,7 +54,7 @@ export default function BirthdayCard(props) {
                   <MenuItem value={31}>1 Month</MenuItem>
                   <MenuItem value={93}>3 Months</MenuItem>
                   <MenuItem value={186}>6 Months</MenuItem>
-                  <MenuItem value={20000}>Forever</MenuItem>
+                  <MenuItem value={365}>12 Months</MenuItem>
                 </Select>
               </Grid>
               <Grid item xs={4}>
@@ -68,27 +63,31 @@ export default function BirthdayCard(props) {
             </Grid>
           </FormControl>
         </Box>
-        {upcomingBirthdays && upcomingBirthdays.length > 0 ? 
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Birthday</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {upcomingBirthdaysSuccess && upcomingBirthdays.map((row) => (
-                <TableRow key={row._id}>
-                  <TableCell>{row.name}</TableCell>
-                  <TableCell>{moment(row.birthday).format('DD-MM-YYYY')}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        : 
-        <UpcomingEmpty message="No Upcoming Birthdays"/>
+        {upcomingBirthdaysSuccess ?
+          (upcomingBirthdays && upcomingBirthdays.length > 0 ?
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Birthday</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {upcomingBirthdaysSuccess && upcomingBirthdays.map((row) => (
+                    <TableRow key={row._id}>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{moment(row.birthday).format('DD-MM-YYYY')}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+            :
+            <UpcomingEmpty message="No Upcoming Birthdays" />
+          )
+          :
+          <LoadingTableSkeleton />
         }
       </React.Fragment>
     );
