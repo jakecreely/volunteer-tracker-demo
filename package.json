@@ -2,5 +2,8 @@
   "dependencies": {
     "jest": "^29.6.1",
     "mjml": "^4.13.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.2"
   }
 }
