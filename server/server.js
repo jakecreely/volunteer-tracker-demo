@@ -42,15 +42,6 @@ const setupServer = () => {
   
     app.use(limiter)
   
-    mongoose.set('strictQuery', true);
-    mongoose.connect(process.env.CONNECTION_URL, { useUnifiedTopology: true, useNewUrlParser: true });
-  
-    connection = mongoose.connection;
-  
-    connection.once("open", function () {
-      console.log("MongoDB database connection established successfully");
-    });
-  
     app.listen(process.env.PORT || 8080, () =>
       console.log(`Server running on port ${process.env.PORT}!`),
     );
