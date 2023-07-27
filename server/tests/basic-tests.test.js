@@ -1,11 +1,17 @@
 const axios = require('axios');
-const setupServer = require('../server');
-const {beforeAll, afterAll, describe, test, expect} = require('@jest/globals');
+const { setupServer, stopServer } = require('../server');
+const {beforeAll, afterAll, describe, test, expect, done} = require('@jest/globals');
 
 beforeAll(async () => {
     // Init database - through docker
 
-    await setupServer()
+    connection = await setupServer()
+    console.log(connection)
+})
+
+afterAll(async () => {
+    console.log("Closing Server");
+    await stopServer()
 })
 
 describe('Basic tests', () => {

@@ -20,49 +20,59 @@ const rewardRoutes = require('./routes/awardRoutes')
 const roleRoutes = require('./routes/roleRoutes')
 const documentRoutes = require('./routes/documentRoutes')
 const env = process.env.NODE_ENV || 'development';
-dotenv.config({ path: `.env.${env}` });
 
-const setupServer = async () => {
+dotenv.config({ path: `./.env.${env}` });
+let connection;
 
-  const app = express();
+const setupServer = () => {
 
-  console.log(process.env.CONNECTION_URL)
+  return new Promise((resolve, reject) => {
+    const app = express();
 
-  app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-
-  const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 200,
-    standardHeaders: true,
-    legacyHeaders: false
-  });
-
-  app.use(limiter)
-
-  mongoose.set('strictQuery', true);
-  mongoose.connect(process.env.CONNECTION_URL, { useUnifiedTopology: true, useNewUrlParser: true });
-
-  const connection = mongoose.connection;
-
-  connection.once("open", function () {
-    console.log("MongoDB database connection established successfully");
-  });
-
-  app.listen(process.env.PORT || 8080, () =>
-    console.log(`Server running on port ${process.env.PORT}!`),
-  );
-
-  app.use('/volunteers', volunteerRoutes);
-  app.use('/training', trainingRoutes);
-  app.use('/awards', rewardRoutes);
-  app.use('/roles', roleRoutes);
-  app.use('/documents', documentRoutes);
-
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-  return { app, connection };
+    app.use(cors());
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+  
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 200,
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+  
+    app.use(limiter)
+  
+    mongoose.set('strictQuery', true);
+    mongoose.connect(process.env.CONNECTION_URL, { useUnifiedTopology: true, useNewUrlParser: true });
+  
+    connection = mongoose.connection;
+  
+    connection.once("open", function () {
+      console.log("MongoDB database connection established successfully");
+    });
+  
+    app.listen(process.env.PORT || 8080, () =>
+      console.log(`Server running on port ${process.env.PORT}!`),
+    );
+  
+    app.use('/volunteers', volunteerRoutes);
+    app.use('/training', trainingRoutes);
+    app.use('/awards', rewardRoutes);
+    app.use('/roles', roleRoutes);
+    app.use('/documents', documentRoutes);
+  
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  
+    resolve(connection)
+  })
 }
 
-module.exports = setupServer;
+const stopServer = () => {
+  return new Promise((resolve, reject) => {
+    connection.close(() => {
+      resolve()
+    })
+  })
+}
+
+module.exports = { setupServer, stopServer };
