@@ -14,7 +14,6 @@ awardSchema.pre('findOneAndUpdate', async function (next) {
   if (updatedFields.name) {
     try {
       const awardId = this.getQuery()["_id"];
-      console.log("Updating award with ID: " + awardId)
       // Update the name field of all the awards in the Volunteer schema
       await Volunteer.updateMany(
         { 'awards.awardId': awardId },

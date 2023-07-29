@@ -31,7 +31,7 @@ router.post('/create', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Provided ID is invalid')
+        res.status(400).send({message: 'Provided ID is invalid'})
     } else {
         try {
             let award = await Award.findOne({ _id: req.params['id'] })
@@ -51,7 +51,8 @@ router.put('/update/:id', async (req, res) => {
         res.status(400).send('Provided ID is invalid')
     } else {
         try {
-            let updatedAward = await Award.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            await Award.findOneAndUpdate({ _id: req.params['id'] }, req.body) // Returned the doc before update
+            let updatedAward = await Award.findOne({ _id: req.params['id'] })
             if (updatedAward === null) {
                 res.status(404).send('No award found with that ID')
             } else {

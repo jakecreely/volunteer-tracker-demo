@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mongodb_dev:
+    image: mongo:latest
+    container_name: development-db
+    ports:
+      - "27017:27017"    # Forward host port 27017 to container port 27017 (MongoDB default port)
+    volumes:
+      - mongodb_dev_data:/data/db
+  mongodb_test:
+    image: mongo:latest    
+    container_name: test-db
+    ports:
+      - "27018:27017"    # Forward host port 27018 to container port 27017 (MongoDB default port)
+
+volumes:
+  mongodb_dev_data:

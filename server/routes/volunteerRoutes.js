@@ -29,7 +29,6 @@ router.get('/outstanding-documents', async (req, res) => {
 //TODO: Add validation for the request body
 router.post('/create', async (req, res) => {
     try {
-        console.log(req.body)
         const tempVolunteer = new Volunteer(req.body)
         let savedVolunteer = await tempVolunteer.save()
         res.status(201).send(savedVolunteer)

@@ -20,14 +20,6 @@ const randomVolunteer = () => {
     }
 }
 
-const generateVolunteers = (amount) => {
-    for (let i = 0; i < amount; i++) {
-        console.log(randomVolunteer())
-    }
-}
-
-generateVolunteers(5);
-
 const randomDocument = () => {
     const randomIndex = Math.floor(Math.random() * documents.length)
     return {
@@ -35,14 +27,6 @@ const randomDocument = () => {
         name: documents[randomIndex]
     }
 }
-
-const generateDocuments = (amount) => {
-    for (let i = 0; i < amount; i++) {
-        console.log(randomDocument())
-    }
-}
-
-generateDocuments(5);
 
 const randomRole = () => {
     const randomIndex = Math.floor(Math.random() * roles.length);
@@ -52,29 +36,14 @@ const randomRole = () => {
     }
 }
 
-const generateRoles = (amount) => {
-    for (let i = 0; i < amount; i++) {
-        console.log(randomRole())
-    }
-}
-
-generateRoles(5)
-
 const randomAward = () => {
     const randomIndex = Math.floor(Math.random() * awards.length);
     return {
         id: faker.database.mongodbObjectId(),
-        name: awards[randomIndex]
+        name: awards[randomIndex],
+        requiredServiceLength: faker.number.int({min: 0, max: 1000})
     }
 }
-
-const generateAwards = (amount) => {
-    for (let i = 0; i < amount; i++) {
-        console.log(randomAward())
-    }
-}
-
-generateAwards(5)
 
 const randomTraining = () => {
     const randomIndex = Math.floor(Math.random() * training.length);
@@ -84,12 +53,4 @@ const randomTraining = () => {
     }
 }
 
-const generateTraining = (amount) => {
-    for (let i = 0; i < amount; i++) {
-        console.log(randomTraining())
-    }
-}
-
-generateTraining(5)
-
-module.export = { randomVolunteer, randomAward, randomDocument, randomRole, randomTraining }
+module.exports = { randomVolunteer, randomAward, randomDocument, randomRole, randomTraining }
