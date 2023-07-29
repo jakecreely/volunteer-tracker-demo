@@ -1,22 +1,21 @@
 const axios = require('axios');
 const { setupServer, stopServer } = require('../server');
-const {beforeAll, afterAll, describe, test, expect, done} = require('@jest/globals');
-const dbSetup = require('../db/setup');
+const { beforeAll, afterAll, describe, test, expect } = require('@jest/globals');
+const { dbSetup, stopDB } = require('../db/setup');
 
 beforeAll(async () => {
     await dbSetup()
-
-    connection = await setupServer()
+    await setupServer()
 })
 
 afterAll(async () => {
-    console.log("Closing Server");
+    await stopDB()
     await stopServer()
 })
 
 describe('Basic tests', () => {
     test('GET /awards', async () => {
-        const response = await axios.get('http://localhost:4001/awards')
+        const response = await axios.get(process.env.API_URL + '/awards')
         expect(response.status).toBe(200)
     })
 })

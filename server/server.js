@@ -25,7 +25,6 @@ dotenv.config({ path: `./.env.${env}` });
 let connection;
 
 const setupServer = () => {
-
   return new Promise((resolve, reject) => {
     const app = express();
 
@@ -42,7 +41,7 @@ const setupServer = () => {
   
     app.use(limiter)
   
-    app.listen(process.env.PORT || 8080, () =>
+    connection = app.listen(process.env.PORT || 8080, () =>
       console.log(`Server running on port ${process.env.PORT}!`),
     );
   
@@ -53,7 +52,7 @@ const setupServer = () => {
     app.use('/documents', documentRoutes);
   
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-  
+
     resolve(connection)
   })
 }

@@ -1,5 +1,9 @@
-const setupServer = require("./server");
+const { setupServer } = require("./server");
+const { dbSetup } = require("./db/setup");
 
-// More Handling
+const startDevEnvironment = async () => {
+    await dbSetup();
+    await setupServer();
+}
 
-setupServer();
+startDevEnvironment();
