@@ -13,66 +13,81 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/create', async (req, res) => {
-    if (!req.body.name || !req.body.renewalFrequency || !req.body.excludedRoles) {
-        res.status(400).send("Missing required fields (name and/or length and/or excluded roles)")
-    } else {
-        try {
-            const tempTraining = new Training({
-                name: req.body.name,
-                renewalFrequency: req.body.renewalFrequency,
-                excludedRoles: req.body.excludedRoles
-            })
-            let savedTraining = await tempTraining.save()
-            res.status(201).send(savedTraining)
-        } catch (err) {
+router.post('/', async (req, res) => {
+    try {
+        let excludedArr = req.body.excludedRoles
+        if (excludedArr === undefined) {
+            excludedArr = []
+        }
+        const tempTraining = new Training({
+            name: req.body.name,
+            renewalFrequency: req.body.renewalFrequency,
+            excludedRoles: excludedArr
+        })
+        let savedTraining = await tempTraining.save()
+        res.status(201).send(savedTraining)
+    } catch (err) {
+        if (err instanceof mongoose.Error.ValidationError) {
+            res.status(400).send(err.message)
+        } else {
             res.status(500).send(err.message)
         }
     }
+
 })
 
 router.get('/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Provided ID is invalid')
-    } else {
-        try {
-            let training = await Training.findOne({ _id: req.params['id'] })
-            if (training === null) {
-                res.status(404).send('No training found with that ID')
-            } else {
-                res.status(200).send(training)
-            }
-        } catch (err) {
+    try {
+        let training = await Training.findOne({ _id: req.params['id'] })
+        if (training === null) {
+            res.status(404).send('No training found with that ID')
+        } else {
+            res.status(200).send(training)
+        }
+    } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
             res.status(500).send(err.message)
         }
     }
 })
 
-router.put('/update/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Provided ID is invalid')
-    } else if (req.body.name && req.body.renewalFrequency && req.body.excludedRoles) {
-        await Training.findOneAndUpdate({_id: req.params['id']}, req.body)
-        let updatedTraining = await Training.findOne({_id: req.params['id']})
+router.put('/:id', async (req, res) => {
+    try {
+        await Training.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+        let updatedTraining = await Training.findOne({ _id: req.params['id'] })
         if (updatedTraining === null) {
             res.status(404).send('No training found with that ID')
         } else {
             res.status(200).send(updatedTraining)
         }
-    } else {
-        res.status(400).send('Missing required fields (name and/or length and/or excluded roles)')
+    } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else if (err instanceof mongoose.Error.ValidationError) {
+            res.status(400).send(err.message)
+        } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+            res.status(404).send('No training found with that ID')
+        } else {
+            res.status(500).send(err.message)
+        }
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send({ message: 'Provided ID is invalid' })
-    } else {
+router.delete('/:id', async (req, res) => {
+    try {
         let deletedTraining = await Training.findOneAndDelete({ _id: req.params['id'] })
         if (deletedTraining === null) {
             res.status(404).send('No training found with that ID')
         } else {
             res.status(200).send(deletedTraining)
+        }
+    } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
+            res.status(500).send(err.message)
         }
     }
 })

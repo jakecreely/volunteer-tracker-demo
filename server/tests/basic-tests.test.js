@@ -470,7 +470,7 @@ describe("Roles", () => {
             })
 
             let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training/create', {
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: [{
@@ -550,7 +550,7 @@ describe("Training", () => {
                         name: savedExcludedRole.data.name
                     }]
                 }
-                await axios.post(process.env.API_URL + '/training/create', {
+                await axios.post(process.env.API_URL + '/training', {
                     name: randomTrainings[i].name,
                     renewalFrequency: randomTrainings[i].renewalFrequency,
                     excludedRoles: randomTrainings[i].excludedRoles
@@ -580,7 +580,7 @@ describe("Training", () => {
     describe("GET /training/:id", () => {
         test("When asked for an existing training, it should retrieve it and respond with status of 200", async () => {
             let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training/create', {
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
@@ -613,10 +613,10 @@ describe("Training", () => {
         })
     })
 
-    describe("POST /training/create", () => {
+    describe("POST /training", () => {
         test("When creating a new training with all required fields, it should respond with the created training and status of 201", async () => {
             let randTraining = randomTraining()
-            const response = await axios.post(process.env.API_URL + '/training/create', {
+            const response = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
@@ -630,27 +630,44 @@ describe("Training", () => {
 
         test("When creating a new training with missing required fields, it should respond with status of 400", async () => {
             try {
-                await axios.post(process.env.API_URL + '/training/create', {})
+                await axios.post(process.env.API_URL + '/training', {invalid: 'invalid'})
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
         })
 
         test("When creating a new training with an invalid role ID, it should respond with status of 400", async () => {
-            expect(true).toBe(false)
+            let randTraining = randomTraining()
+            randTraining.excludedRoles = [{
+                roleId: -1,
+                name: randomRole().name
+            }]
+
+            try {
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randTraining.name,
+                    renewalFrequency: randTraining.renewalFrequency,
+                    excludedRoles: randTraining.excludedRoles
+                })
+            } catch (err) {
+                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+            }
         })
     })
 
-    describe("PUT /training/update/:id", () => {
+    describe("PUT /training/:id", () => {
         test("When updating an existing training with all required fields, it should respond with the updated training and status of 200", async () => {
             let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training/create', {
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
             let excludedRole = randomRole()
+            let savedExcludedRole = await axios.post(process.env.API_URL + '/roles', {
+                name: excludedRole.name
+            })
 
             let updatedTraining = randomTraining()
             while (updatedTraining.name === savedTraining.data.name) {
@@ -658,11 +675,11 @@ describe("Training", () => {
             }
 
             updatedTraining.excludedRoles = [{
-                roleId: excludedRole._id,
-                name: excludedRole.name
+                roleId: savedExcludedRole.data._id,
+                name: savedExcludedRole.data.name
             }]
 
-            const response = await axios.put(process.env.API_URL + '/training/update/' + savedTraining.data._id, {
+            const response = await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, {
                 name: updatedTraining.name,
                 renewalFrequency: updatedTraining.renewalFrequency,
                 excludedRoles: updatedTraining.excludedRoles
@@ -670,21 +687,21 @@ describe("Training", () => {
 
             expect(response.data.name).toBe(updatedTraining.name)
             expect(response.data.renewalFrequency).toBe(updatedTraining.renewalFrequency)
-            expect(response.data.excludedRoles[0].name).toBe(excludedRole.name)
-            expect(response.data.excludedRoles[0].roleId).toBe(excludedRole._id)
+            expect(response.data.excludedRoles[0].name).toBe(savedExcludedRole.data.name)
+            expect(response.data.excludedRoles[0].roleId).toBe(savedExcludedRole.data._id)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
         test("When updating an existing training with missing required fields, it should respond with status of 400 and the training should be unchanged", async () => {
             let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training/create', {
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
             try {
-                await axios.put(process.env.API_URL + '/training/update/' + savedTraining.data._id, {})
+                await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, {invalid: 'invalid'})
             } catch (err) {
                 let response = await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
                 expect(response.data.name).toBe(randTraining.name)
@@ -697,7 +714,7 @@ describe("Training", () => {
         test("When updating a non-existent training with an invalid object ID, it should respond with status of 400", async () => {
             let trainingId = -1
             try {
-                await axios.put(process.env.API_URL + '/training/update/' + trainingId, {
+                await axios.put(process.env.API_URL + '/training/' + trainingId, {
                     name: randomTraining().name,
                     renewalFrequency: randomTraining().renewalFrequency,
                     excludedRoles: randomTraining().excludedRoles
@@ -710,7 +727,7 @@ describe("Training", () => {
         test("When updating a non-existent training with a valid object ID, it should respond with status of 404", async () => {
             let trainingId = faker.database.mongodbObjectId()
             try {
-                await axios.put(process.env.API_URL + '/training/update/' + trainingId, {
+                await axios.put(process.env.API_URL + '/training/' + trainingId, {
                     name: randomTraining().name,
                     renewalFrequency: randomTraining().renewalFrequency,
                     excludedRoles: randomTraining().excludedRoles
@@ -721,16 +738,16 @@ describe("Training", () => {
         })
     })
 
-    describe("DELETE /training/delete/:id", () => {
+    describe("DELETE /training/:id", () => {
         test("When deleting an existing training, it should respond with the deleted training and status of 200", async () => {
             let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training/create', {
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
-            const response = await axios.delete(process.env.API_URL + '/training/delete/' + savedTraining.data._id)
+            const response = await axios.delete(process.env.API_URL + '/training/' + savedTraining.data._id)
             expect(response.data.name).toBe(savedTraining.data.name)
             expect(response.data.renewalFrequency).toBe(savedTraining.data.renewalFrequency)
             expect(response.data.excludedRoles).toStrictEqual(savedTraining.data.excludedRoles)
@@ -740,7 +757,7 @@ describe("Training", () => {
         test("When deleting a non-existent training with an invalid object ID, it should respond with status of 400", async () => {
             let trainingId = -1
             try {
-                await axios.delete(process.env.API_URL + '/training/delete/' + trainingId)
+                await axios.delete(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
@@ -749,7 +766,7 @@ describe("Training", () => {
         test("When deleting a non-existent training with a valid object ID, it should respond with status of 404", async () => {
             let trainingId = faker.database.mongodbObjectId()
             try {
-                await axios.delete(process.env.API_URL + '/training/delete/' + trainingId)
+                await axios.delete(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
@@ -1575,7 +1592,7 @@ describe("Volunteers", () => {
             let renewalFrequency = Math.floor(Math.random() * 5) + 1
             for (let i = 0; i < numberOfTraining; i++) {
                 let randTraining = randomTraining()
-                await axios.post(process.env.API_URL + '/training/create', {
+                await axios.post(process.env.API_URL + '/training', {
                     name: randTraining.name,
                     renewalFrequency: renewalFrequency,
                     excludedRoles: randTraining.excludedRoles,
