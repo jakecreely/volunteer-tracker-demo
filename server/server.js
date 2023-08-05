@@ -31,26 +31,27 @@ const setupServer = () => {
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-  
-    const limiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 200,
-      standardHeaders: true,
-      legacyHeaders: false
-    });
-  
-    app.use(limiter)
-  
+
+    if (process.env.NODE_ENV === 'production') {
+      const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 200,
+        standardHeaders: true,
+        legacyHeaders: false
+      });
+      app.use(limiter)
+    }
+
     connection = app.listen(process.env.PORT || 8080, () =>
       console.log(`Server running on port ${process.env.PORT}!`),
     );
-  
+
     app.use('/volunteers', volunteerRoutes);
     app.use('/training', trainingRoutes);
     app.use('/awards', rewardRoutes);
     app.use('/roles', roleRoutes);
     app.use('/documents', documentRoutes);
-  
+
     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
     resolve(connection)

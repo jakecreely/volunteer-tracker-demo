@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
     }
 })
 
-router.post('/create', async (req, res) => {
+router.post('/', async (req, res) => {
     if (!req.body.name || !req.body.requiredServiceLength) {
         res.status(400).send("Missing required fields (name and/or length)")
     } else {
@@ -46,7 +46,7 @@ router.get('/:id', async (req, res) => {
     }
 })
 
-router.put('/update/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
         res.status(400).send('Provided ID is invalid')
     } else {
@@ -64,7 +64,7 @@ router.put('/update/:id', async (req, res) => {
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
         res.status(400).send('Provided ID is invalid')
     } else {

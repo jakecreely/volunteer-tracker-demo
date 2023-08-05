@@ -9,8 +9,8 @@ const randomVolunteer = () => {
     return {
         id: faker.database.mongodbObjectId(),
         name: faker.person.fullName(),
-        startDate: faker.date.past({years: 10}),
-        birthday: faker.date.birthdate(),
+        startDate: faker.date.past({years: 10}).toISOString(),
+        birthday: faker.date.birthdate().toISOString(),
         breakDuration: faker.number.int({min: 0, max: 1000}), // Max could be present - start date
         isArchived: false,
         roles: [],
@@ -49,7 +49,9 @@ const randomTraining = () => {
     const randomIndex = Math.floor(Math.random() * training.length);
     return {
         id: faker.database.mongodbObjectId(),
-        name: training[randomIndex]
+        name: training[randomIndex],
+        renewalFrequency: faker.number.int({min: 0, max: 5}),
+        excludedRoles: []
     }
 }
 

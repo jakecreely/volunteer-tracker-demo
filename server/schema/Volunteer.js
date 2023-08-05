@@ -109,7 +109,7 @@ volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
   if (daysThreshold < 0) {
     throw new Error("daysThreshold must be greater than or equal to 0")
   }
-  
+
   const today = moment()
   const upcoming = moment().add(daysThreshold, 'days')
   
@@ -135,6 +135,8 @@ volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
     const birthdayB = moment(b.birthday).set('year', today.year())
     return birthdayA.isBefore(birthdayB) ? -1 : 1;
   });
+
+  console.log(sortedBirthdays)
 
   return sortedBirthdays
 }

@@ -19,7 +19,9 @@ router.get('/', async (req, res) => {
 router.get('/outstanding-documents', async (req, res) => {
     try {
         let documents = await Document.find()
+        console.log(documents)
         let volunteersWithDocuments = await Volunteer.findOutstandingDocuments(documents)
+        console.log(volunteersWithDocuments)
         res.status(200).send(volunteersWithDocuments)
     } catch (err) {
         res.status(500).send(err.message)
@@ -69,11 +71,12 @@ router.put('/update/:id', async (req, res) => {
         res.status(400).send('Provided ID is invalid')
     } else {
         try {
-            let volunteer = await Volunteer.findOneAndUpdate({ _id: req.params['id'] }, req.body)
-            if (volunteer === null) {
+            await Volunteer.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            let updatedVolunteer = await Volunteer.findOne({ _id: req.params['id'] })
+            if (updatedVolunteer === null) {
                 res.status(404).send('Volunteer could not be found with given id')
             } else {
-                res.status(200).send(volunteer)
+                res.status(200).send(updatedVolunteer)
             }
         } catch (err) {
             res.status(500).send(err.message)
@@ -90,7 +93,7 @@ router.delete('/delete/:id', async (req, res) => {
             if (volunteer === null) {
                 res.status(404).send('Volunteer could not be found with given id')
             } else {
-                res.status(200).send(result)
+                res.status(200).send(volunteer)
             }
         } catch (err) {
             res.status(500).send(err.message)

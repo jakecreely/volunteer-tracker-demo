@@ -19,7 +19,7 @@ let connection = null;
 
 const dbSetup = async () => {
     if (process.env.NODE_ENV !== 'production') {
-        const isDBReachable = await new Promise((resolve) => {
+        let isDBReachable = await new Promise((resolve) => {
             // Returns false if the database needs to be started
             portscanner.checkPortStatus(27017, '127.0.0.1', function (error, status) {
                 resolve(status === 'open')
@@ -42,7 +42,6 @@ const dbSetup = async () => {
     // One the container is up, we can connect to it
     // Clear the database - add the test collections
     // Need to change start script to set up server and db at the same time but seperate files
-    if (connection === null) {
         try {
             mongoose.set('strictQuery', true);
             mongoose.connect(process.env.CONNECTION_URL, { useUnifiedTopology: true, useNewUrlParser: true });
@@ -58,9 +57,6 @@ const dbSetup = async () => {
             console.error(e);
             throw e;
         }
-    } else {
-        return connection;
-    }
 }
 
 const stopDB = async () => {

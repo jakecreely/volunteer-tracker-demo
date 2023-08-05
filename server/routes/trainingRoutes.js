@@ -51,13 +51,16 @@ router.get('/:id', async (req, res) => {
 router.put('/update/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
         res.status(400).send('Provided ID is invalid')
-    } else {
-        let updatedTraining = await Training.findOneAndUpdate({_id: req.params['id']}, req.body)
+    } else if (req.body.name && req.body.renewalFrequency && req.body.excludedRoles) {
+        await Training.findOneAndUpdate({_id: req.params['id']}, req.body)
+        let updatedTraining = await Training.findOne({_id: req.params['id']})
         if (updatedTraining === null) {
             res.status(404).send('No training found with that ID')
         } else {
             res.status(200).send(updatedTraining)
         }
+    } else {
+        res.status(400).send('Missing required fields (name and/or length and/or excluded roles)')
     }
 })
 

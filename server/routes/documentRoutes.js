@@ -53,9 +53,10 @@ router.get('/:id', async (req, res) => {
 router.put('/update/:id', async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
         res.status(400).send('Provided ID is invalid')
-    } else {
+    } else if (req.body.name) {
         try {
-            let updatedDocument = await Document.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            await Document.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            let updatedDocument = await Document.findOne({ _id: req.params['id'] })
             if (updatedDocument === null) {
                 res.status(404).send('No document found with that ID')
             } else {
@@ -64,6 +65,8 @@ router.put('/update/:id', async (req, res) => {
         } catch (err) {
             res.status(500).send(err.message)
         }
+    } else {
+        res.status(400).send('Missing required fields (name)')
     }
 })
 

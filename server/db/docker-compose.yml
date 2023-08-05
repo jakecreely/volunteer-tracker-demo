@@ -13,6 +13,10 @@ services:
     container_name: test-db
     ports:
       - "27018:27017"    # Forward host port 27018 to container port 27017 (MongoDB default port)
+    volumes:
+      - mongodb_test_data:/data/db
 
 volumes:
   mongodb_dev_data:
+  mongodb_test_data:
+

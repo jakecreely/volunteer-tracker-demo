@@ -55,7 +55,8 @@ router.put('/update/:id', async (req, res) => {
         res.status(400).send('Provided ID is invalid')
     } else {
         try {
-            let updatedRole = await Role.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            await Role.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+            let updatedRole = await Role.findOne({ _id: req.params['id'] })
             if (updatedRole === null) {
                 res.status(404).send('No role found with that ID')
             } else {
