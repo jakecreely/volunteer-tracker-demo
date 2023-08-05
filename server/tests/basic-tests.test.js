@@ -40,6 +40,8 @@ describe("Awards", () => {
                 return a.requiredServiceLength - b.requiredServiceLength
             })
 
+            console.log(randomAwards)
+
             const response = await axios.get(process.env.API_URL + '/awards')
 
             for (let i = 0; i < numberOfAwards; i++) {
@@ -1509,8 +1511,6 @@ describe("Volunteers", () => {
 
             const response = await axios.get(process.env.API_URL + '/volunteers/birthdays/upcoming/' + daysThreshold)
 
-            console.log(randomVolunteers)
-            console.log(response.data)
 
             for (let i = 0; i < numberOfVolunteers; i++) {
                 // _id, name, birthdays are returned

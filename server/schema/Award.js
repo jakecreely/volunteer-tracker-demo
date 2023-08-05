@@ -3,27 +3,46 @@ const Volunteer = require("./Volunteer");
 const moment = require("moment");
 
 const awardSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  requiredServiceLength: { type: Number, required: true }
+  name: {
+    type: String,
+    required: [true, 'Award name is required']
+  },
+  requiredServiceLength: {
+    type: Number,
+    required: [true, 'Required service length is required'],
+    min: [0, 'Required service length must be greater than or equal to 0']
+  }
 });
 
 awardSchema.pre('findOneAndUpdate', async function (next) {
-  const updatedFields = this.getUpdate();
+  try {
+    const docToUpdate = await this.model.findOne(this.getQuery());
 
-  // If the name field has been modified, update all the awards in the Volunteer schema
-  if (updatedFields.name) {
-    try {
+    if (docToUpdate === null) {
+      return next(new mongoose.Error.DocumentNotFoundError('No document found with that ID'));
+    }
+
+    // Apply the update to a temporary document to avoid modifying the original document
+    const updatedFields = { ...docToUpdate.toObject(), ...this.getUpdate() };
+
+    // Create a new document instance with the updated fields
+    const updatedDoc = new this.model(updatedFields);
+
+    // Validate the updated document against the schema
+    await updatedDoc.validate();
+
+    // If the name field has been modified, update all the awards in the Volunteer schema
+    if (this.getUpdate().name) {
       const awardId = this.getQuery()["_id"];
       // Update the name field of all the awards in the Volunteer schema
       await Volunteer.updateMany(
         { 'awards.awardId': awardId },
         { $set: { 'awards.$.name': updatedFields.name } }
       );
-    } catch (error) {
-      next(error);
     }
+  } catch (error) {
+    next(error);
   }
-
   next();
 });
 
