@@ -61,6 +61,10 @@ router.put('/:id', async (req, res) => {
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
+        } else if (err instanceof mongoose.Error.ValidationError) {
+            res.status(400).send(err.message)
+        } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+            res.status(404).send('No role found with that ID')
         } else {
             res.status(500).send(err.message)
         }
