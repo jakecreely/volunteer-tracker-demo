@@ -40,8 +40,6 @@ describe("Awards", () => {
                 return a.requiredServiceLength - b.requiredServiceLength
             })
 
-            console.log(randomAwards)
-
             const response = await axios.get(process.env.API_URL + '/awards')
 
             for (let i = 0; i < numberOfAwards; i++) {
@@ -766,7 +764,7 @@ describe("Documents", () => {
             let randomDocuments = new Array(numberOfDocuments)
             for (let i = 0; i < numberOfDocuments; i++) {
                 randomDocuments[i] = randomDocument()
-                await axios.post(process.env.API_URL + '/documents/create', {
+                await axios.post(process.env.API_URL + '/documents', {
                     name: randomDocuments[i].name,
                     isRequired: randomDocuments[i].isRequired
                 })
@@ -804,7 +802,7 @@ describe("Documents", () => {
     describe("GET /documents/:id", () => {
         test("When asked for an existing document, it should retrieve it and respond with status of 200", async () => {
             let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents/create', {
+            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
@@ -833,10 +831,10 @@ describe("Documents", () => {
         })
     })
 
-    describe("POST /documents/create", () => {
+    describe("POST /documents", () => {
         test("When creating a new document with all required fields, it should respond with the created document and status of 201", async () => {
             let randDocument = randomDocument()
-            const response = await axios.post(process.env.API_URL + '/documents/create', {
+            const response = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
@@ -846,17 +844,17 @@ describe("Documents", () => {
 
         test("When creating a new document with missing required fields, it should respond with status of 400", async () => {
             try {
-                await axios.post(process.env.API_URL + '/documents/create', {})
+                await axios.post(process.env.API_URL + '/documents', {})
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
         })
     })
 
-    describe("PUT /documents/update/:id", () => {
+    describe("PUT /documents/:id", () => {
         test("When updating an existing document with all required fields, it should respond with the updated document and status of 200", async () => {
             let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents/create', {
+            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
@@ -865,7 +863,7 @@ describe("Documents", () => {
                 updatedDocument = randomDocument()
             }
 
-            const response = await axios.put(process.env.API_URL + '/documents/update/' + savedDocument.data._id, {
+            const response = await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, {
                 name: updatedDocument.name,
             })
 
@@ -875,13 +873,14 @@ describe("Documents", () => {
 
         test("When updating an existing document with missing required fields, it should respond with status of 400", async () => {
             let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents/create', {
+            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
             try {
-                await axios.put(process.env.API_URL + '/documents/update/' + savedDocument.data._id, {})
+                await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, {invalid: "invalid"}) // When this empty, it's a 500
             } catch (err) {
+                console.log(err.response.status)
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
         })
@@ -889,7 +888,7 @@ describe("Documents", () => {
         test("When updating a non-existent document with an invalid object ID, it should respond with status of 400", async () => {
             let documentId = -1
             try {
-                await axios.put(process.env.API_URL + '/documents/update/' + documentId, {
+                await axios.put(process.env.API_URL + '/documents/' + documentId, {
                     name: randomDocument().name,
                 })
             } catch (err) {
@@ -900,7 +899,7 @@ describe("Documents", () => {
         test("When updating a non-existent document with a valid object ID, it should respond with status of 404", async () => {
             let documentId = faker.database.mongodbObjectId()
             try {
-                await axios.put(process.env.API_URL + '/documents/update/' + documentId, {
+                await axios.put(process.env.API_URL + '/documents/' + documentId, {
                     name: randomDocument().name,
                 })
             } catch (err) {
@@ -910,7 +909,7 @@ describe("Documents", () => {
 
         test("When updating the name of a document, it should update the name of the document in volunteers", async () => {
             let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents/create', {
+            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
@@ -936,7 +935,7 @@ describe("Documents", () => {
                 updatedDocument = randomDocument()
             }
 
-            let updatedSavedDocument = await axios.put(process.env.API_URL + '/documents/update/' + savedDocument.data._id, {
+            let updatedSavedDocument = await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, {
                 name: updatedDocument.name,
             })
 
@@ -945,14 +944,14 @@ describe("Documents", () => {
         })
     })
 
-    describe("DELETE /documents/delete/:id", () => {
+    describe("DELETE /documents/:id", () => {
         test("When deleting an existing document, it should respond with the deleted document and status of 200", async () => {
             let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents/create', {
+            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
-            const response = await axios.delete(process.env.API_URL + '/documents/delete/' + savedDocument.data._id)
+            const response = await axios.delete(process.env.API_URL + '/documents/' + savedDocument.data._id)
             expect(response.data.name).toBe(randDocument.name)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
@@ -960,7 +959,7 @@ describe("Documents", () => {
         test("When deleting a non-existent document with an invalid object ID, it should respond with status of 400", async () => {
             let documentId = -1
             try {
-                await axios.delete(process.env.API_URL + '/documents/delete/' + documentId)
+                await axios.delete(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
@@ -969,7 +968,7 @@ describe("Documents", () => {
         test("When deleting a non-existent document with a valid object ID, it should respond with status of 404", async () => {
             let documentId = faker.database.mongodbObjectId()
             try {
-                await axios.delete(process.env.API_URL + '/documents/delete/' + documentId)
+                await axios.delete(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
@@ -1276,7 +1275,7 @@ describe("Volunteers", () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
-                await axios.post(process.env.API_URL + '/documents/create', {
+                await axios.post(process.env.API_URL + '/documents', {
                     name: randDocument.name,
                     isRequired: randDocument.isRequired
                 })
@@ -1329,7 +1328,7 @@ describe("Volunteers", () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
-                await axios.post(process.env.API_URL + '/documents/create', {
+                await axios.post(process.env.API_URL + '/documents', {
                     name: randDocument.name,
                     isRequired: randDocument.isRequired
                 })
@@ -1371,7 +1370,7 @@ describe("Volunteers", () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
-                await axios.post(process.env.API_URL + '/documents/create', {
+                await axios.post(process.env.API_URL + '/documents', {
                     name: randDocument.name,
                     isRequired: randDocument.isRequired
                 })
@@ -1422,7 +1421,7 @@ describe("Volunteers", () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
-                await axios.post(process.env.API_URL + '/documents/create', {
+                await axios.post(process.env.API_URL + '/documents', {
                     name: randDocument.name,
                     isRequired: randDocument.isRequired
                 })

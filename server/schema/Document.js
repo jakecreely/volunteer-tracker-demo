@@ -2,26 +2,46 @@ const mongoose = require("mongoose");
 const Volunteer = require("./Volunteer");
 
 const documentSchema = new mongoose.Schema({
-  name: { type: String, required: true }
+  name: {
+    type: String,
+    required: [true, 'Document name is required']
+  }
 });
 
 documentSchema.pre('findOneAndUpdate', async function (next) {
-  const updatedFields = this.getUpdate();
-  
-  // If the name field has been modified, update all the awards in the Volunteer schema
-  if (updatedFields.name) {
-    try {
+  try {
+    const docToUpdate = await this.model.findOne(this.getQuery());
+
+    if (docToUpdate === null) {
+      return next(new mongoose.Error.DocumentNotFoundError('No document found with that ID'));
+    }
+
+    if (this.getUpdate() === undefined) {
+      return next(new mongoose.Error.ValidationError('No update provided'));
+    }
+
+    // Apply the update to a temporary document to avoid modifying the original document
+    const updatedFields = { ...docToUpdate.toObject(), ...this.getUpdate() };
+
+    // Create a new document instance with the updated fields
+    const updatedDoc = new this.model(updatedFields);
+
+    // Validate the updated document against the schema
+    await updatedDoc.validate();
+
+    // If the name field has been modified, update all the awards in the Volunteer schema
+    if (this.getUpdate() !== undefined) {
       const documentId = this.getQuery()["_id"];
-      console.log("Updating document with ID: " + documentId)
       // Update the name field of all the awards in the Volunteer schema
       await Volunteer.updateMany(
         { 'documents.documentId': documentId },
         { $set: { 'documents.$.name': updatedFields.name } }
       );
-
-    } catch (error) {
-      next(error);
+    } else {
+      return next(new mongoose.Error.ValidationError('No name field provided'));
     }
+  } catch (error) {
+    next(error);
   }
 
   next();
