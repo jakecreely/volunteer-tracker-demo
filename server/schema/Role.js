@@ -3,7 +3,10 @@ const Volunteer = require("./Volunteer");
 const Training = require("./Training");
 
 const roleSchema = new mongoose.Schema({
-  name: { type: String, required: true }
+  name: { 
+    type: String, 
+    required: true 
+  }
 });
 
 roleSchema.pre('findOneAndUpdate', async function (next) {

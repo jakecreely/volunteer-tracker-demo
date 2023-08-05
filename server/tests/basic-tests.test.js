@@ -289,7 +289,7 @@ describe("Roles", () => {
             let randomRoles = new Array(numberOfRoles)
             for (let i = 0; i < numberOfRoles; i++) {
                 randomRoles[i] = randomRole()
-                await axios.post(process.env.API_URL + '/roles/create', {
+                await axios.post(process.env.API_URL + '/roles', {
                     name: randomRoles[i].name
                 })
             }
@@ -325,7 +325,7 @@ describe("Roles", () => {
     describe("GET /roles/:id", () => {
         test("When asked for an existing role, it should retrieve it and respond with status of 200", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -354,10 +354,10 @@ describe("Roles", () => {
         })
     })
 
-    describe("POST /roles/create", () => {
+    describe("POST /roles", () => {
         test("When creating a new role with all required fields, it should respond with the created role and status of 201", async () => {
             let randRole = randomRole()
-            const response = await axios.post(process.env.API_URL + '/roles/create', {
+            const response = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -367,17 +367,17 @@ describe("Roles", () => {
 
         test("When creating a new role with missing required fields, it should respond with status of 400", async () => {
             try {
-                await axios.post(process.env.API_URL + '/roles/create', {})
+                await axios.post(process.env.API_URL + '/roles', {})
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
         })
     })
 
-    describe("PUT /roles/update/:id", () => {
+    describe("PUT /roles/:id", () => {
         test("When updating an existing role with all required fields, it should respond with the updated role and status of 200", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -386,7 +386,7 @@ describe("Roles", () => {
                 updatedRole = randomRole()
             }
 
-            const response = await axios.put(process.env.API_URL + '/roles/update/' + savedRole.data._id, {
+            const response = await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
                 name: updatedRole.name
             })
 
@@ -396,12 +396,12 @@ describe("Roles", () => {
 
         test("When updating an existing role with missing required fields, it should respond with status of 400", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
             try {
-                await axios.put(process.env.API_URL + '/roles/update/' + savedRole.data._id, {})
+                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {})
             } catch (err) {
                 //TODO: Should be 400, but it's 500 - need to check the body before trying to update
                 expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
@@ -411,7 +411,7 @@ describe("Roles", () => {
         test("When updating a non-existent role with an invalid object ID, it should respond with status of 400", async () => {
             let roleId = -1
             try {
-                await axios.put(process.env.API_URL + '/roles/update/' + roleId, {
+                await axios.put(process.env.API_URL + '/roles/' + roleId, {
                     name: randomRole().name
                 })
             } catch (err) {
@@ -422,7 +422,7 @@ describe("Roles", () => {
         test("When updating a non-existent role with a valid object ID, it should respond with status of 404", async () => {
             let roleId = faker.database.mongodbObjectId()
             try {
-                await axios.put(process.env.API_URL + '/roles/update/' + roleId, {
+                await axios.put(process.env.API_URL + '/roles/' + roleId, {
                     name: randomRole().name
                 })
             } catch (err) {
@@ -432,7 +432,7 @@ describe("Roles", () => {
 
         test("When updating the name of a role, it should update the name of the role in volunteers", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -457,7 +457,7 @@ describe("Roles", () => {
                 updatedRole = randomRole()
             }
 
-            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/update/' + savedRole.data._id, {
+            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
                 name: updatedRole.name
             })
 
@@ -467,7 +467,7 @@ describe("Roles", () => {
 
         test("When updating the name of a role, it should update the name of the role in excluded roles in training", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -486,7 +486,7 @@ describe("Roles", () => {
                 updatedRole = randomRole()
             }
 
-            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/update/' + savedRole.data._id, {
+            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
                 name: updatedRole.name
             })
 
@@ -495,14 +495,14 @@ describe("Roles", () => {
         })
     })
 
-    describe("DELETE /roles/delete/:id", () => {
+    describe("DELETE /roles/:id", () => {
         test("When deleting an existing role, it should respond with the deleted roles and status of 200", async () => {
             let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
-            const response = await axios.delete(process.env.API_URL + '/roles/delete/' + savedRole.data._id)
+            const response = await axios.delete(process.env.API_URL + '/roles/' + savedRole.data._id)
             expect(response.data.name).toBe(randRole.name)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
@@ -510,7 +510,7 @@ describe("Roles", () => {
         test("When deleting a non-existent role with an invalid object ID, it should respond with status of 400", async () => {
             let roleId = -1
             try {
-                await axios.delete(process.env.API_URL + '/roles/delete/' + roleId)
+                await axios.delete(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
@@ -519,7 +519,7 @@ describe("Roles", () => {
         test("When deleting a non-existent role with a valid object ID, it should respond with status of 404", async () => {
             let roleId = faker.database.mongodbObjectId()
             try {
-                await axios.delete(process.env.API_URL + '/roles/delete/' + roleId)
+                await axios.delete(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
@@ -531,7 +531,7 @@ describe("Training", () => {
     describe("GET /training", () => {
         test("When asked for a list of the training, all should be received with a status of 200", async () => {
             let excludedRole = randomRole()
-            let savedExcludedRole = await axios.post(process.env.API_URL + '/roles/create', {
+            let savedExcludedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: excludedRole.name
             })
 
