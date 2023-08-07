@@ -20,8 +20,6 @@ router.get('/', async (req, res) => {
 router.get('/outstanding-documents', async (req, res) => {
     try {
         let volunteersWithDocuments = await volunteerController.findOutstandingDocuments()
-        console.log("Volunteers with documents")
-        console.log(volunteersWithDocuments)
         res.status(200).send(volunteersWithDocuments)
     } catch (err) {
         res.status(500).send(err.message)
