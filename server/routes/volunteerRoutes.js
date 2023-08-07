@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose')
 
-const Training = require('../schema/Training')
-const Volunteer = require('../schema/Volunteer')
-const Award = require('../schema/Award')
-const Document = require('../schema/Document')
+const Training = require('../models/Training')
+const Volunteer = require('../models/Volunteer')
+const Award = require('../models/Award')
+const Document = require('../models/Document')
 
 router.get('/', async (req, res) => {
     try {

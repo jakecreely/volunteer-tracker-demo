@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose')
-const Training = require('../schema/Training')
+const Training = require('../models/Training')
 
 
 router.get('/', async (req, res) => {

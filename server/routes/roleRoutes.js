@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose')
-const Role = require('../schema/Role')
+const Role = require('../models/Role')
 
 router.get('/', async (req, res) => {
     try {

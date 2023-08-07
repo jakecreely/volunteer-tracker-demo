@@ -6,11 +6,11 @@ const { randomAward, randomVolunteer, randomRole, randomTraining, randomDocument
 const { faker } = require('@faker-js/faker');
 const { ObjectId } = require('mongodb');
 const moment = require('moment');
-const Volunteer = require('../schema/Volunteer');
-const Award = require('../schema/Award');
-const Role = require('../schema/Role');
-const Training = require('../schema/Training');
-const Document = require('../schema/Document');
+const Volunteer = require('../models/Volunteer');
+const Award = require('../models/Award');
+const Role = require('../models/Role');
+const Training = require('../models/Training');
+const Document = require('../models/Document');
 
 beforeAll(async () => {
     // await dbSetup()

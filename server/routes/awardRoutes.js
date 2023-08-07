@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose')
-const Award = require('../schema/Award')
+const Award = require('../models/Award')
 
 router.get('/', async (req, res) => {
     try {

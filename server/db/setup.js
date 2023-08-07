@@ -2,18 +2,18 @@ const dockerCompose = require('docker-compose')
 const path = require('path');
 const portscanner = require('portscanner');
 const mongoose = require('mongoose');
-const Role = require('../schema/Role');
-const Award = require('../schema/Award');
-const Volunteer = require('../schema/Volunteer');
-const Training = require('../schema/Training');
-const Document = require('../schema/Document');
+const Role = require('../models/Role');
+const Award = require('../models/Award');
+const Volunteer = require('../models/Volunteer');
+const Training = require('../models/Training');
+const Document = require('../models/Document');
 
 // Schema
-require('../schema/Training')
-require('../schema/Volunteer')
-require('../schema/Award')
-require('../schema/Role')
-require('../schema/Document')
+require('../models/Training')
+require('../models/Volunteer')
+require('../models/Award')
+require('../models/Role')
+require('../models/Document')
 
 let connection = null;
 

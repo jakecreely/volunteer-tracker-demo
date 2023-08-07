@@ -7,11 +7,11 @@ const rateLimit = require('express-rate-limit')
 const dotenv = require('dotenv')
 
 // Schema
-require('./schema/Training')
-require('./schema/Volunteer')
-require('./schema/Award')
-require('./schema/Role')
-require('./schema/Document')
+require('./models/Training')
+require('./models/Volunteer')
+require('./models/Award')
+require('./models/Role')
+require('./models/Document')
 
 // Routes
 const volunteerRoutes = require('./routes/volunteerRoutes')
