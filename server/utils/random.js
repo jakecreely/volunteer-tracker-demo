@@ -50,7 +50,7 @@ const randomTraining = () => {
     return {
         id: faker.database.mongodbObjectId(),
         name: training[randomIndex],
-        renewalFrequency: faker.number.int({min: 0, max: 5}),
+        renewalFrequency: faker.number.int({min: 1, max: 5}),
         excludedRoles: []
     }
 }

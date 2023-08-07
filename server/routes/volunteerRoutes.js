@@ -27,73 +27,86 @@ router.get('/outstanding-documents', async (req, res) => {
 })
 
 //TODO: Add validation for the request body
-router.post('/create', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const tempVolunteer = new Volunteer(req.body)
         let savedVolunteer = await tempVolunteer.save()
         res.status(201).send(savedVolunteer)
     } catch (err) {
-        res.status(500).send(err.message)
+        if (err instanceof mongoose.Error.ValidationError) {
+            res.status(400).send(err.message)
+        } else {
+            res.status(500).send(err.message)
+        }
     }
 })
 
 router.get('/birthdays/upcoming/:daysThreshold', async (req, res) => {
     try {
-        let upcomingBirthdays = await Volunteer.findUpcomingBirthdays(req.params.daysThreshold)
-        res.status(200).send(upcomingBirthdays)
+        if (req.params.daysThreshold < 0) {
+            console.log('Days threshold must be a postive integer')
+            res.status(400).send('Days threshold must be a postive integer')
+        } else {
+            let upcomingBirthdays = await Volunteer.findUpcomingBirthdays(req.params.daysThreshold)
+            res.status(200).send(upcomingBirthdays)
+        }
     } catch (err) {
         res.status(500).send(err.message)
     }
 })
 
 router.get('/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Invalid volunteer id provided')
-    } else {
-        try {
-            let volunteer = await Volunteer.findOne({ _id: req.params['id'] })
-            if (volunteer === null) {
-                res.status(404).send("Volunteer could not be found with given id")
-            } else {
-                res.status(200).send(volunteer)
-            }
-        } catch (err) {
+    try {
+        let volunteer = await Volunteer.findOne({ _id: req.params['id'] })
+        if (volunteer === null) {
+            res.status(404).send("Volunteer could not be found with given ID")
+        } else {
+            res.status(200).send(volunteer)
+        }
+    } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
             res.status(500).send(err.message)
         }
     }
 })
 
 
-router.put('/update/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Provided ID is invalid')
-    } else {
-        try {
-            await Volunteer.findOneAndUpdate({ _id: req.params['id'] }, req.body)
-            let updatedVolunteer = await Volunteer.findOne({ _id: req.params['id'] })
-            if (updatedVolunteer === null) {
-                res.status(404).send('Volunteer could not be found with given id')
-            } else {
-                res.status(200).send(updatedVolunteer)
-            }
-        } catch (err) {
+router.put('/:id', async (req, res) => {
+    try {
+        await Volunteer.findOneAndUpdate({ _id: req.params['id'] }, req.body)
+        let updatedVolunteer = await Volunteer.findOne({ _id: req.params['id'] })
+        if (updatedVolunteer === null) {
+            res.status(404).send('Volunteer could not be found with given id')
+        } else {
+            res.status(200).send(updatedVolunteer)
+        }
+    } catch (err) {
+        if (err instanceof mongoose.Error.ValidationError) {
+            res.status(400).send(err.message)
+        } else if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+            res.status(404).send('Volunteer could not be found with given id')
+        } else {
             res.status(500).send(err.message)
         }
     }
 })
 
-router.delete('/delete/:id', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Provided ID is invalid')
-    } else {
-        try {
-            let volunteer = await Volunteer.findOneAndDelete({ _id: req.params['id'] })
-            if (volunteer === null) {
-                res.status(404).send('Volunteer could not be found with given id')
-            } else {
-                res.status(200).send(volunteer)
-            }
-        } catch (err) {
+router.delete('/:id', async (req, res) => {
+    try {
+        let volunteer = await Volunteer.findOneAndDelete({ _id: req.params['id'] })
+        if (volunteer === null) {
+            res.status(404).send('Volunteer could not be found with given id')
+        } else {
+            res.status(200).send(volunteer)
+        }
+    } catch (err) {
+        if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
             res.status(500).send(err.message)
         }
     }

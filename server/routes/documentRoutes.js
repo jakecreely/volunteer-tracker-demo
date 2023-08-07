@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
             res.status(200).send(documents)
         }
     } catch (err) {
-        res.status(500).send({ message: err.message })
+        res.status(500).send(err.message)
     }
 })
 

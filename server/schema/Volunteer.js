@@ -1,56 +1,150 @@
 const mongoose = require("mongoose");
-const moment = require("moment");              
+const moment = require("moment");
 
 const trainingSchema = new mongoose.Schema({
-  trainingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Training', required: true },
-  name: { type: String, required: true },
-  completedOn: { type: Date, required: true },
-  needsRetraining: { type: Boolean, default: true, required: true }
+  trainingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Training',
+    required: [true, 'Training ID is required']
+  },
+  name: {
+    type: String,
+    required: [true, 'Training name is required']
+  },
+  completedOn: {
+    type: Date,
+    required: [true, 'Training completion date is required']
+  },
+  needsRetraining: {
+    type: Boolean,
+    required: [true, 'Needs retraining is required']
+  }
 });
 
 const documentSchema = new mongoose.Schema({
-  documentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Document' },
-  name: { type: String, required: true },
-  isProvided: { type: Boolean, default: false, required: true }
+  documentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Document'
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  isProvided: {
+    type: Boolean,
+    default: false,
+    required: true
+  }
 })
 
 const awardSchema = new mongoose.Schema({
-  awardId: { type: mongoose.Schema.Types.ObjectId, ref: 'Award' },
-  name: { type: String, required: true },
-  achievedDate: { type: Date, required: true },
-  givenDate: { type: Date },
-  isGiven: { type: Boolean, default: false, required: true }
+  awardId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Award'
+  },
+  name: {
+    type: String,
+    required: true
+  },
+  achievedDate: {
+    type: Date,
+    required: true
+  },
+  givenDate: {
+    type: Date
+  },
+  isGiven: {
+    type: Boolean,
+    default: false,
+    required: true
+  }
 });
 
 const roleSchema = new mongoose.Schema({
-  roleId: { type: mongoose.Schema.Types.ObjectId, ref: 'Role' },
-  name: { type: String, required: true }
+  roleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Role'
+  },
+  name: {
+    type: String,
+    required: true
+  }
 });
 
 const volunteerSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  startDate: { type: Date, required: true },
-  birthday: { type: Date, required: true },
-  breakDuration: { type: Number, default: 0, required: true },
-  isArchived: { type: Boolean, default: false, required: true },
-  roles: { type: [roleSchema], required: true },
-  documents: [documentSchema],
-  awards: [awardSchema],
-  training: [trainingSchema]
+  name: {
+    type: String,
+    required: true
+  },
+  startDate: {
+    type: Date,
+    required: true
+  },
+  birthday: {
+    type: Date,
+    required: true
+  },
+  breakDuration: {
+    type: Number,
+    default: 0,
+    required: true
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
+    required: true
+  },
+  roles: {
+    type: [roleSchema],
+    required: true
+  },
+  documents: {
+    type: [documentSchema],
+    required: true
+  },
+  awards: {
+    type: [awardSchema],
+    required: true,
+  },
+  training: {
+    type: [trainingSchema],
+    required: true
+  }
 });
 
 //TODO: look for a better way to do save isGiven
 // Update the isGiven of each volunteer award based on the givenDate
-volunteerSchema.pre('findOneAndUpdate', function(next) {
-  // Loop through the awards in the volunteer update
-  this._update.awards.forEach(award => {
-    // If the givenDate is set to a date, isGiven is set to true
-    if (award.givenDate !== null) {
-      award.isGiven = true
-    } else { // Set isGiven to false in case it was already true but the givenDate is set to null
-      award.isGiven = false
+volunteerSchema.pre('findOneAndUpdate', async function (next) {
+  try {
+    const docToUpdate = await this.model.findOne(this.getQuery());
+
+    if (docToUpdate === null) {
+      return next(new mongoose.Error.DocumentNotFoundError('No document found with that ID'));
     }
-  })
+
+    // Apply the update to a temporary document to avoid modifying the original document
+    const updatedFields = { ...docToUpdate.toObject(), ...this.getUpdate() };
+
+    // Create a new document instance with the updated fields
+    const updatedDoc = new this.model(updatedFields);
+
+    // Validate the updated document against the schema
+    await updatedDoc.validate();
+
+    if (this.getUpdate().awards) {
+      // Loop through the awards in the volunteer update
+      this.getUpdate().awards.forEach(award => {
+        // If the givenDate is set to a date, isGiven is set to true
+        if (award.givenDate !== null) {
+          award.isGiven = true
+        } else { // Set isGiven to false in case it was already true but the givenDate is set to null
+          award.isGiven = false
+        }
+      })
+    }
+  } catch (error) {
+    next(error);
+  }
   next();
 });
 
@@ -90,18 +184,18 @@ volunteerSchema.methods.findOutstandingDocuments = async function (fetchedDocume
 
 volunteerSchema.statics.findOutstandingDocuments = async function (documents) {
 
-    let volunteers = await this.find({}).sort({ startDate: 1 }).exec()
+  let volunteers = await this.find({}).sort({ startDate: 1 }).exec()
 
-    if (volunteers === null) {
-      throw Error("No volunteers found")
-    }
+  if (volunteers === null) {
+    throw Error("No volunteers found")
+  }
 
-    let resultsArr = await Promise.all(volunteers.map(async volunteer => {
-      return await volunteer.findOutstandingDocuments(documents)
-    })
-    )
+  let resultsArr = await Promise.all(volunteers.map(async volunteer => {
+    return await volunteer.findOutstandingDocuments(documents)
+  })
+  )
 
-    return resultsArr
+  return resultsArr
 }
 
 volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
@@ -112,12 +206,12 @@ volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
 
   const today = moment()
   const upcoming = moment().add(daysThreshold, 'days')
-  
+
   let volunteers = await this.find({}).select('_id name birthday').exec()
-  
+
   let upcomingBirthdays = volunteers.filter(volunteer => {
     const birthday = moment(volunteer.birthday).set('year', today.year())
-  
+
     // True if birthday is in the same years and is between today and upcoming
     var isBetween = birthday.isBetween(today, upcoming, null, '[]')
 
@@ -129,7 +223,7 @@ volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
 
     return isBetween;
   });
-  
+
   let sortedBirthdays = upcomingBirthdays.sort((a, b) => {
     const birthdayA = moment(a.birthday).set('year', today.year())
     const birthdayB = moment(b.birthday).set('year', today.year())
