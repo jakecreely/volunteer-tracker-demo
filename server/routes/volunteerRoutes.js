@@ -19,8 +19,9 @@ router.get('/', async (req, res) => {
 
 router.get('/outstanding-documents', async (req, res) => {
     try {
-        let documents = await Document.find()
-        let volunteersWithDocuments = await Volunteer.findOutstandingDocuments(documents)
+        let volunteersWithDocuments = await volunteerController.findOutstandingDocuments()
+        console.log("Volunteers with documents")
+        console.log(volunteersWithDocuments)
         res.status(200).send(volunteersWithDocuments)
     } catch (err) {
         res.status(500).send(err.message)
@@ -45,10 +46,9 @@ router.post('/', async (req, res) => {
 router.get('/birthdays/upcoming/:daysThreshold', async (req, res) => {
     try {
         if (req.params.daysThreshold < 0) {
-            console.log('Days threshold must be a postive integer')
             res.status(400).send('Days threshold must be a postive integer')
         } else {
-            let upcomingBirthdays = await Volunteer.findUpcomingBirthdays(req.params.daysThreshold)
+            let upcomingBirthdays = await volunteerController.findUpcomingBirthdays(req.params.daysThreshold)
             res.status(200).send(upcomingBirthdays)
         }
     } catch (err) {

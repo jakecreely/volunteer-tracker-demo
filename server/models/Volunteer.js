@@ -148,91 +148,22 @@ volunteerSchema.pre('findOneAndUpdate', async function (next) {
   next();
 });
 
-volunteerSchema.methods.findOutstandingDocuments = async function (fetchedDocuments) {
-
-  const getNotProvidedDocuments = () => {
-    // Filter out the documents that are provided
-    let outstandingDocuments = this.documents.filter(document => document.isProvided === false)
-    // If there are any outstanding documents, add the volunteer to the array
-    return outstandingDocuments
-  }
-
-  const getMissingDocuments = (fetchedDocuments) => {
-    // Get the volunteers document ids as strings
-    let volunteerDocumentIds = this.documents.map(document => {
-      return document.documentId.toString()
-    })
-    // Filter out the documents that are in the volunteer's documents array already
-    let missingDocuments = fetchedDocuments.filter(document => !volunteerDocumentIds.includes(document._id.toString()))
-    return missingDocuments
-  }
-
-  let outstandingDocuments = getNotProvidedDocuments()
-  let missingDocuments = getMissingDocuments(fetchedDocuments)
-
-  // Adds the volunteer data to the object for the frontend
-  return {
-    volunteer: {
-      _id: this._id,
-      name: this.name,
-      isArchived: this.isArchived
-    },
-    outstandingDocuments: outstandingDocuments,
-    missingDocuments: missingDocuments
-  }
-}
-
-volunteerSchema.statics.findOutstandingDocuments = async function (documents) {
-
-  let volunteers = await this.find({}).sort({ startDate: 1 }).exec()
-
-  if (volunteers === null) {
-    throw Error("No volunteers found")
-  }
-
-  let resultsArr = await Promise.all(volunteers.map(async volunteer => {
-    return await volunteer.findOutstandingDocuments(documents)
+//TODO: Volunteers should be populated with all documents so they are not missing only not provided
+volunteerSchema.methods.findMissingDocuments = async function (fetchedDocuments) {
+  // Get the volunteers document ids as strings
+  let volunteerDocumentIds = this.documents.map(document => {
+    return document.documentId.toString()
   })
-  )
-
-  return resultsArr
+  // Filter out the documents that are in the volunteer's documents array already
+  let missingDocuments = fetchedDocuments.filter(document => !volunteerDocumentIds.includes(document._id.toString()))
+  return missingDocuments
 }
 
-volunteerSchema.statics.findUpcomingBirthdays = async function (daysThreshold) {
-
-  if (daysThreshold < 0) {
-    throw new Error("daysThreshold must be greater than or equal to 0")
-  }
-
-  const today = moment()
-  const upcoming = moment().add(daysThreshold, 'days')
-
-  let volunteers = await this.find({}).select('_id name birthday').exec()
-
-  let upcomingBirthdays = volunteers.filter(volunteer => {
-    const birthday = moment(volunteer.birthday).set('year', today.year())
-
-    // True if birthday is in the same years and is between today and upcoming
-    var isBetween = birthday.isBetween(today, upcoming, null, '[]')
-
-    // If upcoming is next year and birthday has not been found yet
-    if (upcoming.year() > today.year() && !isBetween) {
-      birthday.set('year', today.year() + 1);
-      isBetween = birthday.isBetween(today, upcoming, null, '[]')
-    }
-
-    return isBetween;
-  });
-
-  let sortedBirthdays = upcomingBirthdays.sort((a, b) => {
-    const birthdayA = moment(a.birthday).set('year', today.year())
-    const birthdayB = moment(b.birthday).set('year', today.year())
-    return birthdayA.isBefore(birthdayB) ? -1 : 1;
-  });
-
-  console.log(sortedBirthdays)
-
-  return sortedBirthdays
+volunteerSchema.methods.findNotProvidedDocuments = async function () {
+  // Filter out the documents that are provided
+  let outstandingDocuments = this.documents.filter(document => document.isProvided === false)
+  // If there are any outstanding documents, add the volunteer to the array
+  return outstandingDocuments
 }
 
 volunteerSchema.statics.updateOverdueTraining = async function (training) {
@@ -327,7 +258,7 @@ volunteerSchema.methods.findOverdueTraining = async function (training, daysThre
       }
     })
   })
-  return outstandingTraining
+  return overdueTraining
 }
 
 volunteerSchema.statics.findUpcomingAwards = async function (awards, daysThreshold) {

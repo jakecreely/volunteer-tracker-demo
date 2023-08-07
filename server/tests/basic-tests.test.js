@@ -941,7 +941,6 @@ describe("Documents", () => {
             try {
                 await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, { invalid: "invalid" }) // When this empty, it's a 500
             } catch (err) {
-                console.log(err.response.status)
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
         })
@@ -1352,12 +1351,9 @@ describe("Volunteers", () => {
                     })
                 }
 
-                console.log("Created documents")
 
                 const res = await axios.get(process.env.API_URL + '/documents')
                 const randomDocuments = res.data
-
-                console.log("Fetched documents")
 
                 let numberOfVolunteers = 10
                 let randomVolunteers = new Array(numberOfVolunteers)
@@ -1849,10 +1845,6 @@ describe("Volunteers", () => {
                 if (randTraining.renewalFrequency > maxRenewalFrequency) {
                     maxRenewalFrequency = randTraining.renewalFrequency
                 }
-                console.log({
-                    id: randRole._id,
-                    name: randRole.name
-                })
                 await axios.post(process.env.API_URL + '/training', {
                     name: randTraining.name,
                     renewalFrequency: randTraining.renewalFrequency,
@@ -1903,7 +1895,6 @@ describe("Volunteers", () => {
             // TODO volunteers not sorted by date
 
             const response = await axios.get(process.env.API_URL + '/volunteers/training/upcoming/' + maxRenewalFrequency * 365) // exactly on threshold
-            console.log(response.data)
             for (let i = 0; i < numberOfVolunteers; i++) {
                 expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
                 expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
