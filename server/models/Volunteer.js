@@ -279,109 +279,55 @@ volunteerSchema.methods.updateOverdueTraining = async function (training) {
   return addOverdueTraining(training)
 }
 
-// On the volunteer model statics so that it can be called on all volunteers
-volunteerSchema.statics.findUpcomingTraining = async function (training, daysThreshold) {
-
-  let volunteers = await this.find({}).exec()
-
-  return await Promise.all(volunteers.map(async (volunteer) => {
-    let upcomingTraining = await volunteer.findUpcomingTraining(training, daysThreshold)
-    return {
-      volunteer: {
-        _id: volunteer._id,
-        name: volunteer.name,
-        isArchived: volunteer.isArchived
-      },
-      missingTraining: upcomingTraining.missingTraining,
-      outstandingTraining: upcomingTraining.outstandingTraining
-    }
-  }))
-}
-
-// On the volunteer model methods so that it can be called on a specific volunteer
-volunteerSchema.methods.findUpcomingTraining = async function (training, daysThreshold) {
-  // Checks if the current training is required for the volunteer based on their roles
-  const isRoleExcluded = (volunteerRoles, excludedRoles) => {
-    // If the training does not have any roles then every volunteer should have it
-    if (excludedRoles === undefined || excludedRoles.length === 0) {
-      return false
-    }
-    // Extract the role ids from the excluded roles for difference calculation
-    const excludedRoleIds = excludedRoles.map(excludedRole => excludedRole.roleId.toString())
-    // Get the difference between the volunteer's roles and the excluded roles based on the role ids
-    const roleDifference = volunteerRoles.filter(volunteerRole => {
-      return !excludedRoleIds.includes(volunteerRole.roleId.toString())
-    })
-    // If the difference is empty, then the volunteer has all the excluded roles
-    // e.g. volunteer has roles [Monday, Tuesday] and training excluded roles [Monday, Tuesday]
-    if (roleDifference.length === 0) {
-      return true
-    } else {
-      // Otherwise, the volunteer may have some excluded roles, but not all and should not be excluded
-      return false
-    }
-  }
-
-  // Adds overdue training to the array based if the training is still valid
-  const addOutstandingTraining = (training) => {
-    let outstandingTraining = []
+volunteerSchema.methods.findMissingTraining = async function (training) {
+  let missingTraining = []
+  // Loop through the fetched training
+  training.forEach(fetchedTraining => {
+    // Assume the volunteer does not have the current training
+    let volunteerHasTraining = false
     // Loop through the volunteer's training
     this.training.forEach((volunteerTraining) => {
-      // Loops through the fetched training
-      training.forEach(fetchedTraining => {
-        // If the loops are on the same training element (based on the training id)
-        if (trainingMatches(volunteerTraining, fetchedTraining)) {
-          // If the training is not valid and volunteer's role require the training (not excluded)
-          // then add the training to the array
-          if (!isTrainingValid(volunteerTraining, fetchedTraining, daysThreshold) &&
-            !isRoleExcluded(this.roles, fetchedTraining.excludedRoles)) {
-
-            const dateDue = moment(volunteerTraining.completedOn).add(fetchedTraining.renewalFrequency, 'years')
-
-            outstandingTraining.push({
-              ...volunteerTraining._doc,
-              dateDue: dateDue
-            })
-          }
-        }
-      })
-    })
-    return outstandingTraining
-  }
-
-  const addMissingTraining = (training) => {
-    let missingTraining = []
-    // Loop through the fetched training
-    training.forEach(fetchedTraining => {
-      // Assume the volunteer does not have the current training
-      let volunteerHasTraining = false
-      // Loop through the volunteer's training
-      this.training.forEach((volunteerTraining) => {
-        // If the volunteer has the training, then set the flag to true
-        if (trainingMatches(volunteerTraining, fetchedTraining)) {
-          volunteerHasTraining = true;
-        }
-      })
-      // If the volunteer does not have the training and their roles do not exclude the need for this training
-      if (!volunteerHasTraining && !isRoleExcluded(this.roles, fetchedTraining.excludedRoles)) {
-        missingTraining.push(
-          {
-            trainingId: fetchedTraining._id,
-            name: fetchedTraining.name,
-          })
+      // If the volunteer has the training, then set the flag to true
+      if (trainingMatches(volunteerTraining, fetchedTraining)) {
+        volunteerHasTraining = true;
       }
     })
-    return missingTraining
-  }
+    // If the volunteer does not have the training and their roles do not exclude the need for this training
+    if (!volunteerHasTraining && !isRoleExcluded(this.roles, fetchedTraining.excludedRoles)) {
+      missingTraining.push(
+        {
+          trainingId: fetchedTraining._id,
+          name: fetchedTraining.name,
+        })
+    }
+  })
+  return missingTraining
+}
 
-  let outstandingTraining = addOutstandingTraining(training)
-  let missingTraining = addMissingTraining(training)
+volunteerSchema.methods.findOverdueTraining = async function (training, daysThreshold) {
+  let overdueTraining = []
+  // Loop through the volunteer's training
+  this.training.forEach((volunteerTraining) => {
+    // Loops through the fetched training
+    training.forEach(fetchedTraining => {
+      // If the loops are on the same training element (based on the training id)
+      if (trainingMatches(volunteerTraining, fetchedTraining)) {
+        // If the training is not valid and volunteer's role require the training (not excluded)
+        // then add the training to the array
+        if (!isTrainingValid(volunteerTraining, fetchedTraining, daysThreshold) &&
+          !isRoleExcluded(this.roles, fetchedTraining.excludedRoles)) {
 
-  return {
-    outstandingTraining,
-    missingTraining
-  }
+          const dateDue = moment(volunteerTraining.completedOn).add(fetchedTraining.renewalFrequency, 'years')
 
+          overdueTraining.push({
+            ...volunteerTraining._doc,
+            dateDue: dateDue
+          })
+        }
+      }
+    })
+  })
+  return outstandingTraining
 }
 
 volunteerSchema.statics.findUpcomingAwards = async function (awards, daysThreshold) {
@@ -557,6 +503,27 @@ const isTrainingValid = (volunteerTraining, fetchedTraining, daysThreshold) => {
 
 const trainingMatches = (volunteerTraining, fetchedTraining) => {
   return String(volunteerTraining.trainingId) === String(fetchedTraining._id)
+}
+
+const isRoleExcluded = (volunteerRoles, excludedRoles) => {
+  // If the training does not have any roles then every volunteer should have it
+  if (excludedRoles === undefined || excludedRoles.length === 0) {
+    return false
+  }
+  // Extract the role ids from the excluded roles for difference calculation
+  const excludedRoleIds = excludedRoles.map(excludedRole => excludedRole.roleId.toString())
+  // Get the difference between the volunteer's roles and the excluded roles based on the role ids
+  const roleDifference = volunteerRoles.filter(volunteerRole => {
+    return !excludedRoleIds.includes(volunteerRole.roleId.toString())
+  })
+  // If the difference is empty, then the volunteer has all the excluded roles
+  // e.g. volunteer has roles [Monday, Tuesday] and training excluded roles [Monday, Tuesday]
+  if (roleDifference.length === 0) {
+    return true
+  } else {
+    // Otherwise, the volunteer may have some excluded roles, but not all and should not be excluded
+    return false
+  }
 }
 
 module.exports = mongoose.model("Volunteer", volunteerSchema);

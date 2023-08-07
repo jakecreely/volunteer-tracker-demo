@@ -5,7 +5,8 @@ const mongoose = require('mongoose')
 const Training = require('../models/Training')
 const Volunteer = require('../models/Volunteer')
 const Award = require('../models/Award')
-const Document = require('../models/Document')
+const Document = require('../models/Document');
+const volunteerController = require('../controllers/volunteerController');
 
 router.get('/', async (req, res) => {
     try {
@@ -116,10 +117,9 @@ router.delete('/:id', async (req, res) => {
 // if the difference is greater than the length of the training, then the training is expired
 router.get('/training/upcoming/:daysThreshold?', async (req, res) => {
     try {
-        let daysThreshold = req.params.daysThreshold === undefined ? 0 : req.params.daysThreshold
-        let training = await Training.find()
-        let volunteers = await Volunteer.findUpcomingTraining(training, daysThreshold)
-        res.status(200).send(volunteers)
+        const daysThreshold = req.params.daysThreshold === undefined ? 0 : req.params.daysThreshold
+        const result = await volunteerController.findUpcomingTraining(daysThreshold)
+        res.status(200).send(result)
     } catch (err) {
         res.status(500).send(err.message)
     }

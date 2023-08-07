@@ -1713,7 +1713,7 @@ describe("Volunteers", () => {
             for (let i = 0; i < numberOfVolunteers; i++) {
                 expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
                 expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
-                expect(response.data[i].outstandingTraining.length).toBe(numberOfTraining)
+                expect(response.data[i].overdueTraining.length).toBe(numberOfTraining)
                 expect(response.data[i].missingTraining.length).toBe(0)
                 expect(response.status).toBe(axios.HttpStatusCode.Ok)
             }
@@ -1764,7 +1764,7 @@ describe("Volunteers", () => {
             for (let i = 0; i < numberOfVolunteers; i++) {
                 expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
                 expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
-                expect(response.data[i].outstandingTraining.length).toBe(0)
+                expect(response.data[i].overdueTraining.length).toBe(0)
                 expect(response.data[i].missingTraining.length).toBe(numberOfTraining)
                 expect(response.status).toBe(axios.HttpStatusCode.Ok)
             }
@@ -1826,7 +1826,7 @@ describe("Volunteers", () => {
             for (let i = 0; i < numberOfVolunteers; i++) {
                 expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
                 expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
-                expect(response.data[i].outstandingTraining.length).toBe(0)
+                expect(response.data[i].overdueTraining.length).toBe(0)
                 expect(response.data[i].missingTraining.length).toBe(0)
                 expect(response.status).toBe(axios.HttpStatusCode.Ok)
             }
@@ -1907,7 +1907,7 @@ describe("Volunteers", () => {
             for (let i = 0; i < numberOfVolunteers; i++) {
                 expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
                 expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
-                expect(response.data[i].outstandingTraining.length).toBe(0)
+                expect(response.data[i].overdueTraining.length).toBe(0)
                 expect(response.data[i].missingTraining.length).toBe(0)
                 expect(response.status).toBe(axios.HttpStatusCode.Ok)
             }
