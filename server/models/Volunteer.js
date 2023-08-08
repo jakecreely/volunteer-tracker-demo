@@ -261,6 +261,7 @@ volunteerSchema.methods.findOverdueTraining = async function (training, daysThre
   return overdueTraining
 }
 
+// Move to controller
 volunteerSchema.statics.findUpcomingAwards = async function (awards, daysThreshold) {
   let volunteers = await this.find({})
   let results = await Promise.all(volunteers.map(async (volunteer) => {
@@ -282,6 +283,8 @@ volunteerSchema.statics.findUpcomingAwards = async function (awards, daysThresho
 
 // Specific to a volunteer, finds the awards that are upcoming within the given number of days
 // It also gets any awards that the volunteer has already achieved but not yet been given
+
+// Split into findAwardsNotGiven + findUpcomingAwards
 volunteerSchema.methods.findUpcomingAwards = async function (awards, daysThreshold) {
 
   const addUpcomingAwards = () => {
@@ -321,6 +324,8 @@ volunteerSchema.methods.findUpcomingAwards = async function (awards, daysThresho
 
 // Updates the awards that are overdue at the time of the call (called on the model)
 // Not currently implemented within schema so need to take the code from the api call and put it here
+
+// Move to controller - can then call the findUpcomingAwards etc methods and update the volunteers in the controller
 volunteerSchema.statics.updateUpcomingAwards = async function (awards) {
 
   let volunteers = await this.find()
