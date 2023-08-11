@@ -10,7 +10,7 @@ const volunteerController = require('../controllers/volunteerController');
 
 router.get('/', async (req, res) => {
     try {
-        let volunteers = await Volunteer.find({}).sort({ name: 1 })
+        let volunteers = await volunteerController.findAll()
         res.status(200).send(volunteers)
     } catch (err) {
         res.status(500).send(err.message)
@@ -22,7 +22,11 @@ router.get('/outstanding-documents', async (req, res) => {
         let volunteersWithDocuments = await volunteerController.findOutstandingDocuments()
         res.status(200).send(volunteersWithDocuments)
     } catch (err) {
-        res.status(500).send(err.message)
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(500).send(err.message)
+        }
     }
 })
 
@@ -35,6 +39,8 @@ router.post('/', async (req, res) => {
     } catch (err) {
         if (err instanceof mongoose.Error.ValidationError) {
             res.status(400).send(err.message)
+        } else if (err.status && err.message) {
+            res.status(err.status).send(err.message)
         } else {
             res.status(500).send(err.message)
         }
@@ -43,25 +49,26 @@ router.post('/', async (req, res) => {
 
 router.get('/birthdays/upcoming/:daysThreshold', async (req, res) => {
     try {
-        if (req.params.daysThreshold < 0) {
-            res.status(400).send('Days threshold must be a postive integer')
-        } else {
-            let upcomingBirthdays = await volunteerController.findUpcomingBirthdays(req.params.daysThreshold)
-            res.status(200).send(upcomingBirthdays)
-        }
+        const daysThreshold = req.params.daysThreshold
+        let upcomingBirthdays = await volunteerController.findUpcomingBirthdays(daysThreshold)
+        res.status(200).send(upcomingBirthdays)
     } catch (err) {
-        res.status(500).send(err.message)
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(500).send(err.message)
+        }
     }
 })
 
 router.get('/:id', async (req, res) => {
     try {
-        let volunteer = await Volunteer.findOne({ _id: req.params['id'] })
-        if (volunteer === null) {
-            res.status(404).send("Volunteer could not be found with given ID")
-        } else {
-            res.status(200).send(volunteer)
+        const id = req.params.id
+        const volunteer = await Volunteer.findOne({ _id: id })
+        if (!volunteer) {
+            return res.status(404).send("Volunteer could not be found with given ID")
         }
+        res.status(200).send(volunteer)
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
@@ -74,20 +81,18 @@ router.get('/:id', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
     try {
-        await Volunteer.findOneAndUpdate({ _id: req.params['id'] }, req.body)
-        let updatedVolunteer = await Volunteer.findOne({ _id: req.params['id'] })
-        if (updatedVolunteer === null) {
-            res.status(404).send('Volunteer could not be found with given id')
-        } else {
-            res.status(200).send(updatedVolunteer)
+        const id = req.params.id
+        const foundVolunteer = await Volunteer.findOne({ _id: id })
+        if (!foundVolunteer) {
+            return res.status(404).send('Volunteer could not be found with given ID')
         }
+        const updatedVolunteer = await Volunteer.findOneAndUpdate({ _id: id }, req.body, { new: true })
+        res.status(200).send(updatedVolunteer)
     } catch (err) {
         if (err instanceof mongoose.Error.ValidationError) {
             res.status(400).send(err.message)
         } else if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
-        } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
-            res.status(404).send('Volunteer could not be found with given id')
         } else {
             res.status(500).send(err.message)
         }
@@ -96,12 +101,12 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
     try {
-        let volunteer = await Volunteer.findOneAndDelete({ _id: req.params['id'] })
-        if (volunteer === null) {
-            res.status(404).send('Volunteer could not be found with given id')
-        } else {
-            res.status(200).send(volunteer)
+        const id = req.params.id
+        let volunteer = await Volunteer.findOneAndDelete({ _id: id })
+        if (!volunteer) {
+            return res.status(404).send('Volunteer could not be found with given ID')
         }
+        res.status(200).send(volunteer)
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
@@ -162,8 +167,9 @@ router.put('/awards/update', async (req, res) => {
 // Verify days and id are valid
 router.get('/:id/awards/upcoming/:days?', async (req, res) => {
     try {
-        let days = req.params['days'] === undefined ? 0 : req.params['days']
-        const result = await volunteerController.findUpcomingAwardsForVolunteer(req.params['id'], days)
+        const id = req.params.id
+        const days = req.params['days'] === undefined ? 0 : req.params['days']
+        const result = await volunteerController.findUpcomingAwardsForVolunteer(id, days)
         res.status(200).send(result)
     } catch (err) {
         if (err.status && err.message) {
@@ -179,8 +185,9 @@ router.get('/:id/awards/upcoming/:days?', async (req, res) => {
 
 router.get('/:id/training/upcoming/:days?', async (req, res) => {
     try {
-        let days = req.params['days'] === undefined ? 0 : req.params['days']
-        const result = await volunteerController.findUpcomingTrainingForVolunteer(req.params['id'], days)
+        const id = req.params.id
+        const days = req.params['days'] === undefined ? 0 : req.params['days']
+        const result = await volunteerController.findUpcomingTrainingForVolunteer(id, days)
         res.status(200).send(result)
     } catch (err) {
         if (err.status && err.message) {

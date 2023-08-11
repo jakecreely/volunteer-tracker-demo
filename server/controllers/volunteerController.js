@@ -5,14 +5,26 @@ const createHttpError = require('http-errors');
 
 const volunteerController = {};
 
+volunteerController.findAll = async function () {
+    try {
+        let volunteers = await Volunteer.find({}).sort({ name: 1 }).exec();
+        return volunteers;
+    } catch (err) {
+        throw err;
+    }
+};
+
 volunteerController.findUpcomingTraining = async function (daysThreshold) {
     try {
         if (daysThreshold < 0) {
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const fetchedTrainingResponse = await axios.get(process.env.API_URL + '/training')
-        const fetchedTraining = fetchedTrainingResponse.data;
+        const { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training')
+
+        if (fetchedTraining.length === 0) {
+            throw createHttpError(404, "No Training Found For Finding Upcoming Training")
+        }
 
         const volunteers = await Volunteer.find({}).exec();
 
@@ -32,7 +44,6 @@ volunteerController.findUpcomingTraining = async function (daysThreshold) {
 
         return volunteerTrainingData;
     } catch (err) {
-        // Handle errors if necessary
         throw err;
     }
 };
@@ -43,13 +54,16 @@ volunteerController.findUpcomingTrainingForVolunteer = async function (volunteer
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const fetchedTrainingResponse = await axios.get(process.env.API_URL + '/training');
-        const fetchedTraining = fetchedTrainingResponse.data;
+        const { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training');
+
+        if (fetchedTraining.length === 0) {
+            throw createHttpError(404, "No Training Found For Finding Upcoming Training");
+        }
 
         const volunteer = await Volunteer.findOne({ _id: volunteerId }).exec();
 
         if (!volunteer) {
-            throw createHttpError(404, "Volunteer not found");
+            throw createHttpError(404, "Volunteer Not Found For Finding Upcoming Training");
         }
 
         let missingTraining = await volunteer.findMissingTraining(fetchedTraining);
@@ -65,7 +79,6 @@ volunteerController.findUpcomingTrainingForVolunteer = async function (volunteer
             overdueTraining: overdueTraining
         };
     } catch (err) {
-        // Handle errors if necessary
         throw err;
     }
 };
@@ -73,13 +86,13 @@ volunteerController.findUpcomingTrainingForVolunteer = async function (volunteer
 volunteerController.findUpcomingBirthdays = async function (daysThreshold) {
     try {
         if (daysThreshold < 0) {
-            throw new Error("daysThreshold must be greater than or equal to 0")
+            throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
         const today = moment()
         const upcoming = moment().add(daysThreshold, 'days')
 
-        let volunteers = await Volunteer.find({}).select('_id name birthday').exec()
+        let volunteers = await Volunteer.find({}).select('_id name birthday').sort({birthday: 1}).exec()
 
         let upcomingBirthdays = volunteers.filter(volunteer => {
             const birthday = moment(volunteer.birthday).set('year', today.year())
@@ -110,13 +123,16 @@ volunteerController.findUpcomingBirthdays = async function (daysThreshold) {
 
 volunteerController.findOutstandingDocuments = async function () {
     try {
-        const fetchedDocumentsResponse = await axios.get(process.env.API_URL + '/documents')
-        const fetchedDocuments = fetchedDocumentsResponse.data;
+        const { data: fetchedDocuments } = await axios.get(process.env.API_URL + '/documents')
+
+        if (fetchedDocuments.length === 0) {
+            throw createHttpError(404, "No Documents Found For Finding Outstanding Documents")
+        }
 
         let volunteers = await Volunteer.find({}).sort({ startDate: 1 }).exec()
 
-        if (volunteers === null) {
-            throw Error("No volunteers found")
+        if (!volunteers) {
+            throw createHttpError(404, "No Volunteers To Find Outstanding Documents")
         }
 
         let results = await Promise.all(volunteers.map(async volunteer => {
@@ -145,9 +161,11 @@ volunteerController.findUpcomingAwards = async function (daysThreshold) {
     try {
         const volunteers = await Volunteer.find({})
 
-        const {
-            data: fetchedAwards
-        } = await axios.get(process.env.API_URL + '/awards')
+        const { data: fetchedAwards } = await axios.get(process.env.API_URL + '/awards')
+
+        if (fetchedAwards.length === 0) {
+            throw createHttpError(404, "No Awards Found For Finding Upcoming Awards")
+        }
 
         let results = await Promise.all(volunteers.map(async (volunteer) => {
             const upcomingAwards = await volunteer.findUpcomingAwards(fetchedAwards, daysThreshold)
@@ -177,14 +195,16 @@ volunteerController.findUpcomingAwardsForVolunteer = async function (volunteerId
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const {
-            data: fetchedAwards
-        } = await axios.get(process.env.API_URL + '/awards');
+        const { data: fetchedAwards } = await axios.get(process.env.API_URL + '/awards');
+
+        if (fetchedAwards.length === 0) {
+            throw createHttpError(404, "No Awards Found For Finding Upcoming Awards");
+        }
 
         const volunteer = await Volunteer.findOne({ _id: volunteerId }).exec();
 
         if (!volunteer) {
-            throw createHttpError(404, "Volunteer not found");
+            throw createHttpError(404, "Volunteer Not Found");
         }
 
         const upcomingAwards = await volunteer.findUpcomingAwards(fetchedAwards, daysThreshold)

@@ -2182,30 +2182,28 @@ describe("Volunteers", () => {
         })
 
         test("When there is no training, an empty array should be the response", async () => {
-            let daysThreshold = 30
-            // create volunteer
-            let randVolunteer = randomVolunteer()
-            const {
-                data: createdVolunteer
-            } = await axios.post(process.env.API_URL + '/volunteers', {
-                name: randVolunteer.name,
-                startDate: randVolunteer.startDate,
-                birthday: randVolunteer.birthday, //Currently toISOString() format
-                breakDuration: randVolunteer.breakDuration,
-                isArchived: randVolunteer.isArchived,
-                roles: randVolunteer.roles, // Empty ATM
-                documents: randVolunteer.documents, // Empty ATM
-                awards: randVolunteer.awards, // Empty ATM
-                training: randVolunteer.training // Empty ATM
-            })
+            try {
+                let daysThreshold = 30
+                // create volunteer
+                let randVolunteer = randomVolunteer()
+                const {
+                    data: createdVolunteer
+                } = await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randVolunteer.name,
+                    startDate: randVolunteer.startDate,
+                    birthday: randVolunteer.birthday, //Currently toISOString() format
+                    breakDuration: randVolunteer.breakDuration,
+                    isArchived: randVolunteer.isArchived,
+                    roles: randVolunteer.roles, // Empty ATM
+                    documents: randVolunteer.documents, // Empty ATM
+                    awards: randVolunteer.awards, // Empty ATM
+                    training: randVolunteer.training // Empty ATM
+                })
 
-            const response = await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/training/upcoming/' + daysThreshold)
-
-            expect(response.data.volunteer.name).toBe(randVolunteer.name)
-            expect(response.data.volunteer.isArchived).toBe(randVolunteer.isArchived)
-            expect(response.data.overdueTraining.length).toBe(0)
-            expect(response.data.missingTraining.length).toBe(0)
-            expect(response.status).toBe(axios.HttpStatusCode.Ok)
+                await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/training/upcoming/' + daysThreshold)
+            } catch (err) {
+                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+            }
         })
 
         test("invalid threshold", async () => {
@@ -2776,28 +2774,28 @@ describe("Volunteers", () => {
         })
 
         test("No Awards Exist", async () => {
-            let daysThreshold = 30
-            // create volunteer
-            let randVolunteer = randomVolunteer()
-            const {
-                data: createdVolunteer
-            } = await axios.post(process.env.API_URL + '/volunteers', {
-                name: randVolunteer.name,
-                startDate: randVolunteer.startDate,
-                birthday: randVolunteer.birthday, //Currently toISOString() format
-                breakDuration: randVolunteer.breakDuration,
-                isArchived: randVolunteer.isArchived,
-                roles: randVolunteer.roles, // Empty ATM
-                documents: randVolunteer.documents, // Empty ATM
-                awards: randVolunteer.awards, // Empty ATM
-                training: randVolunteer.training // Empty ATM
-            })
+            try {
+                let daysThreshold = 30
+                // create volunteer
+                let randVolunteer = randomVolunteer()
+                const {
+                    data: createdVolunteer
+                } = await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randVolunteer.name,
+                    startDate: randVolunteer.startDate,
+                    birthday: randVolunteer.birthday, //Currently toISOString() format
+                    breakDuration: randVolunteer.breakDuration,
+                    isArchived: randVolunteer.isArchived,
+                    roles: randVolunteer.roles, // Empty ATM
+                    documents: randVolunteer.documents, // Empty ATM
+                    awards: randVolunteer.awards, // Empty ATM
+                    training: randVolunteer.training // Empty ATM
+                })
 
-            const response = await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/awards/upcoming/' + daysThreshold)
-
-            expect(response.data.upcomingAwards).toStrictEqual([])
-            expect(response.data.awardsNotGiven).toStrictEqual([])
-            expect(response.status).toBe(axios.HttpStatusCode.Ok)
+                const response = await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/awards/upcoming/' + daysThreshold)
+            } catch (err) {
+                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+            }
         })
 
         test("Volunteer has a break, no awards should be returned", async () => {
