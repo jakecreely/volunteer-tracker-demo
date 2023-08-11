@@ -1,13 +1,16 @@
-// volunteerController.js
-
 const axios = require('axios');
 const moment = require('moment');
-const Volunteer = require('../models/Volunteer');xw
+const Volunteer = require('../models/Volunteer');
+const createHttpError = require('http-errors');
 
 const volunteerController = {};
 
 volunteerController.findUpcomingTraining = async function (daysThreshold) {
     try {
+        if (daysThreshold < 0) {
+            throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
+        }
+
         const fetchedTrainingResponse = await axios.get(process.env.API_URL + '/training')
         const fetchedTraining = fetchedTrainingResponse.data;
 
@@ -28,6 +31,39 @@ volunteerController.findUpcomingTraining = async function (daysThreshold) {
         }));
 
         return volunteerTrainingData;
+    } catch (err) {
+        // Handle errors if necessary
+        throw err;
+    }
+};
+
+volunteerController.findUpcomingTrainingForVolunteer = async function (volunteerId, daysThreshold) {
+    try {
+        if (daysThreshold < 0) {
+            throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
+        }
+
+        const fetchedTrainingResponse = await axios.get(process.env.API_URL + '/training');
+        const fetchedTraining = fetchedTrainingResponse.data;
+
+        const volunteer = await Volunteer.findOne({ _id: volunteerId }).exec();
+
+        if (!volunteer) {
+            throw createHttpError(404, "Volunteer not found");
+        }
+
+        let missingTraining = await volunteer.findMissingTraining(fetchedTraining);
+        let overdueTraining = await volunteer.findOverdueTraining(fetchedTraining, daysThreshold);
+
+        return {
+            volunteer: {
+                _id: volunteer._id,
+                name: volunteer.name,
+                isArchived: volunteer.isArchived
+            },
+            missingTraining: missingTraining,
+            overdueTraining: overdueTraining
+        };
     } catch (err) {
         // Handle errors if necessary
         throw err;
@@ -102,6 +138,69 @@ volunteerController.findOutstandingDocuments = async function () {
     } catch (err) {
         console.log(err)
         throw err
+    }
+}
+
+volunteerController.findUpcomingAwards = async function (daysThreshold) {
+    try {
+        const volunteers = await Volunteer.find({})
+
+        const {
+            data: fetchedAwards
+        } = await axios.get(process.env.API_URL + '/awards')
+
+        let results = await Promise.all(volunteers.map(async (volunteer) => {
+            const upcomingAwards = await volunteer.findUpcomingAwards(fetchedAwards, daysThreshold)
+            const awardsNotGiven = await volunteer.findAwardsNotGiven(fetchedAwards)
+            if (upcomingAwards.length > 0 || awardsNotGiven.length > 0) {
+                return {
+                    volunteer: {
+                        _id: volunteer._id,
+                        name: volunteer.name,
+                        isArchived: volunteer.isArchived
+                    },
+                    upcomingAwards: upcomingAwards,
+                    awardsNotGiven: awardsNotGiven
+                }
+            }
+        })
+        )
+        return results.filter((element) => element !== undefined)
+    } catch (err) {
+        throw err
+    }
+}
+
+volunteerController.findUpcomingAwardsForVolunteer = async function (volunteerId, daysThreshold) {
+    try {
+        if (daysThreshold < 0) {
+            throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
+        }
+
+        const {
+            data: fetchedAwards
+        } = await axios.get(process.env.API_URL + '/awards');
+
+        const volunteer = await Volunteer.findOne({ _id: volunteerId }).exec();
+
+        if (!volunteer) {
+            throw createHttpError(404, "Volunteer not found");
+        }
+
+        const upcomingAwards = await volunteer.findUpcomingAwards(fetchedAwards, daysThreshold)
+        const awardsNotGiven = await volunteer.findAwardsNotGiven(fetchedAwards)
+
+        return {
+            volunteer: {
+                _id: volunteer._id,
+                name: volunteer.name,
+                isArchived: volunteer.isArchived
+            },
+            upcomingAwards: upcomingAwards,
+            awardsNotGiven: awardsNotGiven
+        };
+    } catch (err) {
+        throw err;
     }
 }
 

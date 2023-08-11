@@ -119,7 +119,11 @@ router.get('/training/upcoming/:daysThreshold?', async (req, res) => {
         const result = await volunteerController.findUpcomingTraining(daysThreshold)
         res.status(200).send(result)
     } catch (err) {
-        res.status(500).send(err.message)
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(500).send(err.message)
+        }
     }
 })
 
@@ -127,9 +131,8 @@ router.get('/training/upcoming/:daysThreshold?', async (req, res) => {
 router.get('/awards/upcoming/:daysThreshold?', async (req, res) => {
     try {
         let daysThreshold = req.params.daysThreshold === undefined ? 0 : req.params.daysThreshold
-        let awards = await Award.find()
-        let volunteers = await Volunteer.findUpcomingAwards(awards, daysThreshold)
-        res.status(200).send(volunteers)
+        const result = await volunteerController.findUpcomingAwards(daysThreshold)
+        res.status(200).send(result)
     } catch (err) {
         res.status(500).send(err.message)
     }
@@ -158,24 +161,16 @@ router.put('/awards/update', async (req, res) => {
 
 // Verify days and id are valid
 router.get('/:id/awards/upcoming/:days?', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Invalid volunteer id')
-    } else if (req.params['days'] < 0) {
-        res.status(400).send('Days threshold must be a postive integer')
-    } else {
-        try {
-            let days = req.params['days'] === undefined ? 0 : req.params['days']
-            let awards = await Award.find({})
-            if (awards === null) {
-                res.status(404).send('No awards could be found')
-            }
-            let volunteer = await Volunteer.findOne({ _id: req.params['id'] })
-            if (volunteer === null) {
-                res.status(404).send('Volunteer could not be found with given id')
-            }
-            let upcomingAwards = await volunteer.findUpcomingAwards(awards, days)
-            res.status(200).send(upcomingAwards)
-        } catch (err) {
+    try {
+        let days = req.params['days'] === undefined ? 0 : req.params['days']
+        const result = await volunteerController.findUpcomingAwardsForVolunteer(req.params['id'], days)
+        res.status(200).send(result)
+    } catch (err) {
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
             res.status(500).send(err.message)
         }
     }
@@ -183,24 +178,16 @@ router.get('/:id/awards/upcoming/:days?', async (req, res) => {
 
 
 router.get('/:id/training/upcoming/:days?', async (req, res) => {
-    if (!mongoose.Types.ObjectId.isValid(req.params['id'])) {
-        res.status(400).send('Invalid volunteer id')
-    } else if (req.params['days'] < 0) {
-        res.status(400).send('Number of days must be a postive integer')
-    } else {
-        try {
-            let days = req.params['days'] === undefined ? 0 : req.params['days']
-            let training = await Training.find({})
-            if (training === null) {
-                res.status(404).send('No training could be found')
-            }
-            let volunteer = await Volunteer.findOne({ _id: req.params['id'] })
-            if (volunteer === null) {
-                res.status(404).send('Volunteer could not be found with given id')
-            }
-            let upcomingTraining = await volunteer.findUpcomingTraining(training, days)
-            res.status(200).send(upcomingTraining)
-        } catch (err) {
+    try {
+        let days = req.params['days'] === undefined ? 0 : req.params['days']
+        const result = await volunteerController.findUpcomingTrainingForVolunteer(req.params['id'], days)
+        res.status(200).send(result)
+    } catch (err) {
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else if (err instanceof mongoose.Error.CastError) {
+            res.status(400).send('Provided ID is invalid')
+        } else {
             res.status(500).send(err.message)
         }
     }

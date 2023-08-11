@@ -261,62 +261,33 @@ volunteerSchema.methods.findOverdueTraining = async function (training, daysThre
   return overdueTraining
 }
 
-volunteerSchema.statics.findUpcomingAwards = async function (awards, daysThreshold) {
-  let volunteers = await this.find({})
-  let results = await Promise.all(volunteers.map(async (volunteer) => {
-    let upcomingAwards = await volunteer.findUpcomingAwards(awards, daysThreshold)
-    if (upcomingAwards.upcomingAwards.length > 0 || upcomingAwards.awardsNotGiven.length > 0) {
-      return {
-        volunteer: {
-          _id: volunteer._id,
-          name: volunteer.name,
-          isArchived: volunteer.isArchived
-        },
-        ...upcomingAwards
-      }
+volunteerSchema.methods.findUpcomingAwards = async function (awards, daysThreshold) {
+  const serviceTimeInMonths = calculateServiceTimeInMonths(this.startDate, this.breakDuration, daysThreshold)
+  let upcomingAwards = []
+  awards.forEach(award => {
+    if ((award.requiredServiceLength <= serviceTimeInMonths) && !hasAchievedAward(this.awards, award._id)) {
+      upcomingAwards.push({
+        awardId: award._id,
+        name: award.name,
+        achievedDate: calculateAchievedDate(this.startDate, this.breakDuration, award.requiredServiceLength),
+      })
     }
-  })
-  )
-  return results.filter((element) => element !== undefined)
+  });
+  return upcomingAwards
 }
 
-// Specific to a volunteer, finds the awards that are upcoming within the given number of days
-// It also gets any awards that the volunteer has already achieved but not yet been given
-volunteerSchema.methods.findUpcomingAwards = async function (awards, daysThreshold) {
-
-  const addUpcomingAwards = () => {
-    const serviceTimeInMonths = calculateServiceTimeInMonths(this.startDate, this.breakDuration, daysThreshold)
-    let upcomingAwards = []
-    awards.forEach(award => {
-      if ((award.requiredServiceLength <= serviceTimeInMonths) && !hasAchievedAward(this.awards, award._id)) {
-        upcomingAwards.push({
-          awardId: award._id,
-          name: award.name,
-          achievedDate: calculateAchievedDate(this.startDate, this.breakDuration, award.requiredServiceLength),
-        })
-      }
-    });
-    return upcomingAwards
-  }
-
-  const addAwardsNotGiven = () => {
-    let notGivenAwards = []
-    this.awards.forEach(achievedAward => {
-      if (!achievedAward.isGiven) {
-        const award = getAwardById(awards, achievedAward.awardId)
-        notGivenAwards.push({
-          ...achievedAward._doc,
-          achievedDate: calculateAchievedDate(this.startDate, this.breakDuration, award.requiredServiceLength),
-        })
-      }
-    })
-    return notGivenAwards
-  }
-
-  return {
-    upcomingAwards: addUpcomingAwards(),
-    awardsNotGiven: addAwardsNotGiven()
-  }
+volunteerSchema.methods.findAwardsNotGiven = async function (awards) {
+  let notGivenAwards = []
+  this.awards.forEach(achievedAward => {
+    if (!achievedAward.isGiven) {
+      const award = getAwardById(awards, achievedAward.awardId)
+      notGivenAwards.push({
+        ...achievedAward._doc,
+        achievedDate: calculateAchievedDate(this.startDate, this.breakDuration, award.requiredServiceLength),
+      })
+    }
+  })
+  return notGivenAwards
 }
 
 // Updates the awards that are overdue at the time of the call (called on the model)
@@ -396,8 +367,6 @@ const calculateServiceTimeInMonths = (startDate, breakDuration, daysThreshold) =
   let adjustedDate = moment().subtract(breakDuration, 'days')
   adjustedDate = adjustedDate.add(daysThreshold, 'days')
   let temp = adjustedDate.diff(startDate, 'months')
-  console.log('Service time')
-  console.log(temp)
   return temp
 }
 
