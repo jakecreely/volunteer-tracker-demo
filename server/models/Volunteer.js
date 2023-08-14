@@ -418,12 +418,7 @@ const isRoleExcluded = (volunteerRoles, excludedRoles) => {
   })
   // If the difference is empty, then the volunteer has all the excluded roles
   // e.g. volunteer has roles [Monday, Tuesday] and training excluded roles [Monday, Tuesday]
-  if (roleDifference.length === 0) {
-    return true
-  } else {
-    // Otherwise, the volunteer may have some excluded roles, but not all and should not be excluded
-    return false
-  }
+  return (roleDifference.length === 0)
 }
 
 module.exports = mongoose.model("Volunteer", volunteerSchema);

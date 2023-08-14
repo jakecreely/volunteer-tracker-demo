@@ -7,11 +7,7 @@ const Document = require('../models/Document')
 router.get('/', async (req, res) => {
     try {
         let documents = await Document.find({}).sort({ name: 1 })
-        if (documents === null) {
-            res.status(404).send('No documents found')
-        } else {
-            res.status(200).send(documents)
-        }
+        res.status(200).send(documents)
     } catch (err) {
         res.status(500).send(err.message)
     }
@@ -36,11 +32,10 @@ router.post('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         let document = await Document.findOne({ _id: req.params['id'] })
-        if (document === null) {
-            res.status(404).send('No document found with that ID')
-        } else {
-            res.status(200).send(document)
+        if (!document) {
+            return res.status(404).send('No document found with that ID')
         }
+        res.status(200).send(document)
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
@@ -54,15 +49,11 @@ router.put('/:id', async (req, res) => {
     try {
         await Document.findOneAndUpdate({ _id: req.params['id'] }, req.body)
         let updatedDocument = await Document.findOne({ _id: req.params['id'] })
-        if (updatedDocument === null) {
-            res.status(404).send('No document found with that ID')
-        } else {
-            res.status(200).send(updatedDocument)
-        }
+        res.status(200).send(updatedDocument)
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')
-        } else if (err instanceof mongoose.Error.ValidationError) {
+        } else if (err instanceof mongoose.Error.ValidationError) { // Not being reached - findOneAndUpdate doesn't trigger validation
             res.status(400).send(err.message)
         } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
             res.status(404).send('No document found with that ID')
@@ -75,11 +66,10 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         let deletedDocument = await Document.findOneAndDelete({ _id: req.params['id'] })
-        if (deletedDocument === null) {
-            res.status(404).send('No document found with that ID')
-        } else {
-            res.status(200).send(deletedDocument)
+        if (!deletedDocument) {
+            return res.status(404).send('No document found with that ID')
         }
+        res.status(200).send(deletedDocument)
     } catch (err) {
         if (err instanceof mongoose.Error.CastError) {
             res.status(400).send('Provided ID is invalid')

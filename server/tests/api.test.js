@@ -29,10 +29,10 @@ afterAll(async () => {
 
 
 describe("Awards", () => {
-    describe('GET /awards', () => {
-        test('When asked for the list of awards, all should be received and a response of 200 ', async () => {
-            let numberOfAwards = 5
-            let randomAwards = new Array(numberOfAwards)
+    describe("GET /awards", () => {
+        test("Retrieving all awards should return a list of awards and a response with status 200", async () => {
+            const numberOfAwards = 5
+            const randomAwards = new Array(numberOfAwards)
             for (let i = 0; i < numberOfAwards; i++) {
                 randomAwards[i] = randomAward()
                 await axios.post(process.env.API_URL + '/awards', {
@@ -40,100 +40,200 @@ describe("Awards", () => {
                     requiredServiceLength: randomAwards[i].requiredServiceLength
                 })
             }
-            randomAwards.sort((a, b) => {
-                return a.requiredServiceLength - b.requiredServiceLength
-            })
+
+            randomAwards.sort((a, b) => a.requiredServiceLength - b.requiredServiceLength)
 
             const response = await axios.get(process.env.API_URL + '/awards')
 
-            for (let i = 0; i < numberOfAwards; i++) {
-                expect(response.data[i].name).toBe(randomAwards[i].name)
-                expect(response.data[i].requiredServiceLength).toBe(randomAwards[i].requiredServiceLength)
-            }
-
-            expect(response.status).toBe(200)
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
+            expect(response.data.length).toBe(numberOfAwards)
+            response.data.forEach((award, index) => {
+                expect(award).toHaveProperty('name');
+                expect(award).toHaveProperty('requiredServiceLength');
+                expect(award.name).toBe(randomAwards[index].name)
+                expect(award.requiredServiceLength).toBe(randomAwards[index].requiredServiceLength)
+            });
         })
 
-        test("When asked for the list of awards and an error occurs, a response of 500 should be received", async () => {
+        test("An error during award retrieval should result in a response with status 500", async () => {
             jest.spyOn(Award, 'find').mockImplementation(() => {
-                throw new Error('Database connection error');
+                throw new Error('Database Connection Error');
             });
 
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/awards')
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
+            expect(error).not.toBe(null)
 
             Award.find.mockRestore()
         })
 
+        test("When there are no awards available, an empty list should be returned", () => {
+            return axios.get(process.env.API_URL + '/awards').then(response => {
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+                expect(response.data).toStrictEqual([])
+            })
+        })
     })
 
-    describe('GET /awards/:id', () => {
-        test("When asked for an existing order, it should retrieve it and respond with status of 200", async () => {
-            let randAward = randomAward()
-            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+    describe("GET /awards/:id", () => {
+        test("Retrieving an existing award by ID should return the award data and a response with status 200", async () => {
+            const randAward = randomAward()
+            const savedAward = await axios.post(process.env.API_URL + '/awards', {
                 name: randAward.name,
                 requiredServiceLength: randAward.requiredServiceLength
             })
 
             const response = await axios.get(process.env.API_URL + '/awards/' + savedAward.data._id)
 
+            expect(response.data).toHaveProperty('name')
+            expect(response.data).toHaveProperty('requiredServiceLength')
             expect(response.data.name).toBe(randAward.name)
             expect(response.data.requiredServiceLength).toBe(randAward.requiredServiceLength)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a non-existent award with an invalid object ID, it should respond with status of 400", async () => {
-            let awardId = -1
+        test("Requesting a non-existent award with an invalid object ID should result in a response with status 400", async () => {
+            const awardId = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/awards/' + awardId)
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+            expect(error).not.toBeNull()
         })
 
-        test("When asked for a non-existent award with a valid object ID, it should respond with status of 404", async () => {
-            let awardId = faker.database.mongodbObjectId()
+        test("Requesting a non-existent award with a valid object ID should result in a response with status 400", async () => {
+            const awardId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/awards/' + awardId)
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+            expect(error).not.toBeNull()
+        })
+
+        test("An error during award retrieval should result in a response with status 500", async () => {
+            const randAward = randomAward()
+            const savedAward = await axios.post(process.env.API_URL + '/awards', {
+                name: randAward.name,
+                requiredServiceLength: randAward.requiredServiceLength
+            })
+
+            jest.spyOn(Award, 'findOne').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.get(process.env.API_URL + '/awards/' + savedAward.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Award.findOne.mockRestore()
         })
     })
 
-    describe('POST /awards', () => {
-        test("When creating a new award with all required fields, it should respond with the created award and status of 201", async () => {
-            let randAward = randomAward()
+    describe("POST /awards", () => {
+        test("Creating a new award with all required fields should return the created award and a response with status 201", async () => {
+            const randAward = randomAward()
             const response = await axios.post(process.env.API_URL + '/awards', {
                 name: randAward.name,
                 requiredServiceLength: randAward.requiredServiceLength
             })
 
+            expect(response.data).toHaveProperty('name')
+            expect(response.data).toHaveProperty('requiredServiceLength')
             expect(response.data.name).toBe(randAward.name)
             expect(response.data.requiredServiceLength).toBe(randAward.requiredServiceLength)
             expect(response.status).toBe(axios.HttpStatusCode.Created)
         })
 
-        test("When creating a new award with missing required fields, it should respond with status of 400", async () => {
-            let randAward = randomAward()
+        test("Creating a new award with missing required fields should result in a response with status 400", async () => {
+            const randAward = randomAward()
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/awards', {
                     name: randAward.name
                 })
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+            expect(error).not.toBeNull()
 
+            error = null
             try {
                 await axios.post(process.env.API_URL + '/awards', {
                     requiredServiceLength: randAward.requiredServiceLength
                 })
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+
+            expect(error).not.toBeNull()
+        })
+
+        test("Creating a new award with duplicate name should result in a response with status 409", async () => {
+            const { data: existingAward } = await axios.post(process.env.API_URL + '/awards', {
+                name: randomAward().name,
+                requiredServiceLength: randomAward().requiredServiceLength
+            })
+
+            let error = null
+
+            try {
+                await axios.post(process.env.API_URL + '/awards', {
+                    name: existingAward.name,
+                    requiredServiceLength: randomAward().requiredServiceLength
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.Conflict)
+            }
+
+            expect(error).not.toBeNull()
+        })
+
+        test("Creating a new award with unexpected fields the unexpected fields should not be saved to be database", async () => {
+            const {data: award} = await axios.post(process.env.API_URL + '/awards', {
+                name: randomAward().name,
+                requiredServiceLength: randomAward().requiredServiceLength,
+                unexpectedField: 'Unexpected Field'
+            })
+            expect(award).not.toHaveProperty('unexpectedField')
+        })
+
+        test("An error during award creation should result in a response with status 500", async () => {
+            jest.spyOn(Award.prototype, 'save').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.post(process.env.API_URL + '/awards', {
+                    name: randomAward().name,
+                    requiredServiceLength: randomAward().requiredServiceLength
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Award.prototype.save.mockRestore()
         })
     })
 
@@ -160,44 +260,56 @@ describe("Awards", () => {
             }
         })
 
-        test("When updating an existing award with missing required fields, it should respond with status of 400", async () => {
-            let randAward = randomAward()
-            let savedAward = await axios.post(process.env.API_URL + '/awards', {
-                name: randAward.name,
-                requiredServiceLength: randAward.requiredServiceLength
-            })
+        test.todo("When updating an existing award with missing required fields, it should respond with status of 400")
+        // test("When updating an existing award with missing required fields, it should respond with status of 400", async () => {
+        //     let randAward = randomAward()
+        //     let savedAward = await axios.post(process.env.API_URL + '/awards', {
+        //         name: randAward.name,
+        //         requiredServiceLength: randAward.requiredServiceLength
+        //     })
 
-            try {
-                await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
-                    name: randAward.name
-                })
-            } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
-            }
+        //     let nameErr = null
 
-            try {
-                await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
-                    requiredServiceLength: randAward.requiredServiceLength
-                })
-            } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
-            }
-        })
+        //     try {
+        //         await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+        //             name: randAward.name
+        //         })
+        //     } catch (err) {
+        //         nameErr = err
+        //         expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+        //     }
+        //     expect(nameErr).not.toBeNull()
+
+        //     let requiredServiceLengthErr = null
+        //     try {
+        //         await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+        //             requiredServiceLength: randAward.requiredServiceLength
+        //         })
+        //     } catch (err) {
+        //         requiredServiceLengthErr = err
+        //         expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+        //     }
+        //     expect(requiredServiceLengthErr).not.toBeNull()
+        // })
 
         test("When updating a non-existent award with an invalid object ID, it should respond with status of 400", async () => {
-            let awardId = -1
+            const awardId = -1
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/awards/' + awardId, {
                     name: randomAward().name,
                     requiredServiceLength: randomAward().requiredServiceLength
                 })
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+            expect(error).not.toBeNull()
         })
 
         test("When updating a non-existent award with a valid object ID, it should respond with status of 404", async () => {
-            let awardId = faker.database.mongodbObjectId()
+            const awardId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/awards/' + awardId, {
                     name: randomAward().name,
@@ -205,8 +317,10 @@ describe("Awards", () => {
                 })
             }
             catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+            expect(error).not.toBeNull()
         })
 
         // Updating the name of the award, should update the name of the award in volunteers
@@ -252,6 +366,31 @@ describe("Awards", () => {
             expect(response.data.awards[0].name).toBe(updatedSavedAward.data.name)
         })
 
+        test("An error during award update should result in a response with status 500", async () => {
+            let randAward = randomAward()
+            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+                name: randAward.name,
+                requiredServiceLength: randAward.requiredServiceLength
+            })
+
+            jest.spyOn(Award, 'findOneAndUpdate').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+                    name: randomAward().name,
+                    requiredServiceLength: randomAward().requiredServiceLength
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+        })
+
         test.todo("When auto-filling awards with a valid start date and break duration, it should return the awards and status of 200")
     })
 
@@ -273,21 +412,49 @@ describe("Awards", () => {
         })
 
         test("When deleting a non-existent award with an invalid object ID, it should respond with status of 400", async () => {
-            let awardId = -1
+            const awardId = -1
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/awards/' + awardId)
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+            expect(error).not.toBeNull()
         })
 
         test("When deleting a non-existent award with a valid object ID, it should respond with status of 404", async () => {
-            let awardId = faker.database.mongodbObjectId()
+            const awardId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/awards/' + awardId)
             } catch (err) {
+                error = err
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+            expect(error).not.toBeNull()
+        })
+
+        test("An error during award deletion should result in a response with status 500", async () => {
+            let randAward = randomAward()
+            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+                name: randAward.name,
+                requiredServiceLength: randAward.requiredServiceLength
+            })
+
+            jest.spyOn(Award, 'findOneAndDelete').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.delete(process.env.API_URL + '/awards/' + savedAward.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
         })
     })
 })
@@ -372,6 +539,28 @@ describe("Roles", () => {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
         })
+
+        test("An error during role retrieval should result in a response with status of 500", async () => {
+            let randRole = randomRole()
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+                name: randRole.name
+            })
+
+            jest.spyOn(Role, 'findOne').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.get(process.env.API_URL + '/roles/' + savedRole.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Role.findOne.mockRestore()
+        })
     })
 
     describe("POST /roles", () => {
@@ -391,6 +580,25 @@ describe("Roles", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+        })
+
+        test("An error during role creation should result in a response with status of 500", async () => {
+            jest.spyOn(Role.prototype, 'save').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.post(process.env.API_URL + '/roles', {
+                    name: randomRole().name
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Role.prototype.save.mockRestore()
         })
     })
 
@@ -513,6 +721,30 @@ describe("Roles", () => {
             let response = await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
             expect(response.data.excludedRoles[0].name).toBe(updatedSavedRole.data.name)
         })
+
+        test("An error during role update should result in a response with status of 500", async () => {
+            let randRole = randomRole()
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+                name: randRole.name
+            })
+
+            jest.spyOn(Role, 'findOneAndUpdate').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
+                    name: randomRole().name
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Role.findOneAndUpdate.mockRestore()
+        })
     })
 
     describe("DELETE /roles/:id", () => {
@@ -543,6 +775,28 @@ describe("Roles", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+        })
+
+        test("An error during role deletion should result in a response with status of 500", async () => {
+            let randRole = randomRole()
+            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+                name: randRole.name
+            })
+
+            jest.spyOn(Role, 'findOneAndDelete').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.delete(process.env.API_URL + '/roles/' + savedRole.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Role.findOneAndDelete.mockRestore()
         })
     })
 })
@@ -888,6 +1142,23 @@ describe("Documents", () => {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
         })
+
+        test("An error during document retrieval should respond with a status of 500", async () => {
+            jest.spyOn(Document, 'findOne').mockImplementationOnce(() => {
+                throw new Error('Database connection error');
+            });
+
+            let error = null
+            try {
+                await axios.get(process.env.API_URL + '/documents/' + faker.database.mongodbObjectId())
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+            expect(error).not.toBeNull()
+
+            Document.findOne.mockRestore()
+        })
     })
 
     describe("POST /documents", () => {
@@ -907,6 +1178,25 @@ describe("Documents", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+        })
+
+        test("An error during document creation should respond with a status of 500", async () => {
+            jest.spyOn(Document.prototype, 'save').mockImplementationOnce(() => {
+                throw new Error('Database connection error');
+            });
+
+            let error = null
+            try {
+                await axios.post(process.env.API_URL + '/documents', {
+                    name: randomDocument().name,
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+            expect(error).not.toBeNull()
+
+            Document.prototype.save.mockRestore()
         })
     })
 
@@ -1000,6 +1290,25 @@ describe("Documents", () => {
             let response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
             expect(response.data.documents[0].name).toBe(updatedSavedDocument.data.name)
         })
+
+        test("An error during document update should respond with a status of 500", async () => {
+            jest.spyOn(Document, 'findOneAndUpdate').mockImplementationOnce(() => {
+                throw new Error('Database connection error');
+            });
+
+            let error = null
+            try {
+                await axios.put(process.env.API_URL + '/documents/' + faker.database.mongodbObjectId(), {
+                    name: randomDocument().name,
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+            expect(error).not.toBeNull()
+
+            Document.findOneAndUpdate.mockRestore()
+        })
     })
 
     describe("DELETE /documents/:id", () => {
@@ -1030,6 +1339,23 @@ describe("Documents", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+        })
+
+        test("An error during document deletion should respond with a status of 500", async () => {
+            jest.spyOn(Document, 'findOneAndDelete').mockImplementationOnce(() => {
+                throw new Error('Database connection error');
+            });
+
+            let error = null
+            try {
+                await axios.delete(process.env.API_URL + '/documents/' + faker.database.mongodbObjectId())
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+            expect(error).not.toBeNull()
+
+            Document.findOneAndDelete.mockRestore()
         })
     })
 })

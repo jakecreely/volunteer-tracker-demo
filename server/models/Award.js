@@ -14,6 +14,8 @@ const awardSchema = new mongoose.Schema({
   }
 });
 
+awardSchema.index({ name: 1 }, { unique: true });
+
 awardSchema.pre('findOneAndUpdate', async function (next) {
   try {
     const docToUpdate = await this.model.findOne(this.getQuery());

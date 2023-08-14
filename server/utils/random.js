@@ -37,10 +37,10 @@ const randomRole = () => {
 }
 
 const randomAward = () => {
-    const randomIndex = Math.floor(Math.random() * awards.length);
+    const randomName = "Award" + faker.number.int({min: 1, max: 1000000})
     return {
         id: faker.database.mongodbObjectId(),
-        name: awards[randomIndex],
+        name: randomName,
         requiredServiceLength: faker.number.int({min: 0, max: 1000})
     }
 }
