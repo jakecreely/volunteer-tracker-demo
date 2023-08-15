@@ -1,17 +1,9 @@
-name: Node.js CI
-
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./server
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -25,10 +17,10 @@ jobs:
         run: npm ci
 
       - name: Start MongoDB containers
-        run: docker-compose -f server/docker-compose.yml up -d
+        run: docker-compose -f ./docker-compose.yml up -d
 
       - name: Wait for MongoDB to initialize
-        run: docker-compose -f server/docker-compose.yml exec mongodb_test bash -c "while ! nc -z localhost 27018; do sleep 1; done"
+        run: docker-compose -f ./docker-compose.yml exec mongodb_test bash -c "while ! nc -z localhost 27018; do sleep 1; done"
 
       - name: Run database setup script
         run: npm run db-setup   # Replace with the actual script name if different
@@ -37,4 +29,4 @@ jobs:
         run: npm run test
 
       - name: Stop MongoDB containers
-        run: docker-compose -f server/docker-compose.yml down
+        run: docker-compose -f ./docker-compose.yml down
