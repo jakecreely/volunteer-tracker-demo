@@ -208,7 +208,7 @@ describe("Awards", () => {
         })
 
         test("Creating a new award with unexpected fields the unexpected fields should not be saved to be database", async () => {
-            const {data: award} = await axios.post(process.env.API_URL + '/awards', {
+            const { data: award } = await axios.post(process.env.API_URL + '/awards', {
                 name: randomAward().name,
                 requiredServiceLength: randomAward().requiredServiceLength,
                 unexpectedField: 'Unexpected Field'
@@ -238,29 +238,27 @@ describe("Awards", () => {
     })
 
     describe('PUT /awards/:id', () => {
-        test("When updating an existing award with all required fields, it should respond with the updated award and status of 200", async () => {
-            try {
-                const randAward = randomAward()
-                let savedAward = await axios.post(process.env.API_URL + '/awards', {
-                    name: randAward.name,
-                    requiredServiceLength: randAward.requiredServiceLength
-                })
+        test("Updates an existing award with valid data, should return updated award and status 200", async () => {
+            const randAward = randomAward()
+            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+                name: randAward.name,
+                requiredServiceLength: randAward.requiredServiceLength
+            })
 
-                const updatedAward = randomAward()
-                const response = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
-                    name: updatedAward.name,
-                    requiredServiceLength: updatedAward.requiredServiceLength
-                })
+            const updatedAward = randomAward()
+            const response = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+                name: updatedAward.name,
+                requiredServiceLength: updatedAward.requiredServiceLength
+            })
 
-                expect(response.data.name).toBe(updatedAward.name)
-                expect(response.data.requiredServiceLength).toBe(updatedAward.requiredServiceLength)
-                expect(response.status).toBe(axios.HttpStatusCode.Ok)
-            } catch (err) {
-                console.log(err)
-            }
+            expect(response.data).toHaveProperty('name')
+            expect(response.data).toHaveProperty('requiredServiceLength')
+            expect(response.data.name).toBe(updatedAward.name)
+            expect(response.data.requiredServiceLength).toBe(updatedAward.requiredServiceLength)
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test.todo("When updating an existing award with missing required fields, it should respond with status of 400")
+        test.todo("Updating an award with missing required fields, should fail and return a status of 400")
         // test("When updating an existing award with missing required fields, it should respond with status of 400", async () => {
         //     let randAward = randomAward()
         //     let savedAward = await axios.post(process.env.API_URL + '/awards', {
@@ -292,7 +290,7 @@ describe("Awards", () => {
         //     expect(requiredServiceLengthErr).not.toBeNull()
         // })
 
-        test("When updating a non-existent award with an invalid object ID, it should respond with status of 400", async () => {
+        test("Updating a non-existent award with invalid object ID, should fail and return a status of 400", async () => {
             const awardId = -1
             let error = null
             try {
@@ -307,7 +305,7 @@ describe("Awards", () => {
             expect(error).not.toBeNull()
         })
 
-        test("When updating a non-existent award with a valid object ID, it should respond with status of 404", async () => {
+        test("Updating a non-existent award with valid object ID, should fail and return a status of 404", async () => {
             const awardId = faker.database.mongodbObjectId()
             let error = null
             try {
@@ -323,16 +321,15 @@ describe("Awards", () => {
             expect(error).not.toBeNull()
         })
 
-        // Updating the name of the award, should update the name of the award in volunteers
-        test("When updating the name of an award, it should update the name of the award in volunteers", async () => {
-            let randAward = randomAward()
-            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+        test("Updating award name should update volunteers' award names", async () => {
+            const randAward = randomAward()
+            const savedAward = await axios.post(process.env.API_URL + '/awards', {
                 name: randAward.name,
                 requiredServiceLength: randAward.requiredServiceLength
             })
 
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+            const randVolunteer = randomVolunteer()
+            const savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -357,13 +354,13 @@ describe("Awards", () => {
             }
 
             // This should update any volunteers with that award
-            let updatedSavedAward = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+            const {data: updatedSavedAward} = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
                 name: updatedAward.name,
                 requiredServiceLength: updatedAward.requiredServiceLength
             })
 
-            let response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
-            expect(response.data.awards[0].name).toBe(updatedSavedAward.data.name)
+            const {data: fetchedVolunteer} = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
+            expect(fetchedVolunteer.awards[0].name).toBe(updatedSavedAward.name)
         })
 
         test("An error during award update should result in a response with status 500", async () => {
