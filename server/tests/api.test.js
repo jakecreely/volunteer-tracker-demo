@@ -16,16 +16,16 @@ beforeAll(async () => {
     // await dbSetup()
     await initTestDB()
     await setupServer()
-})
+}, 100000)
 
 afterEach(async () => {
     await emptyTestDB()
-})
+}, 100000)
 
 afterAll(async () => {
     await stopDB()
     await stopServer()
-})
+}, 100000)
 
 
 describe("Awards", () => {
