@@ -30,7 +30,7 @@ jobs:
         run: docker-compose -f db/docker-compose.yml up -d
 
       - name: Wait for MongoDB to initialize
-      run: docker-compose -f db/docker-compose.yml run --rm mongodb_test bash -c "while ! nc -z localhost 27018; do sleep 1; done"
+        run: docker-compose -f db/docker-compose.yml run --rm mongodb_test bash -c "while ! nc -z localhost 27018; do sleep 1; done"
 
       - name: Run database setup script
         run: npm run db-setup   # Replace with the actual script name if different
