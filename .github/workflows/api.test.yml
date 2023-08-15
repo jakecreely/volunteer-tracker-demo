@@ -26,14 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Start MongoDB containers
-        run: docker-compose -f db/docker-compose.yml up -d
-
-      - name: Run database setup script
-        run: npm run db-setup   # Replace with the actual script name if different
-
       - name: Run tests
         run: npm run test
-
-      - name: Stop MongoDB containers
-        run: docker-compose -f db/docker-compose.yml down
+        env:
+          CONNECTION_URL: ${{ secrets.CONNECTION_URL }}
+          DBPORT: ${{ secrets.DBPORT }}
+          PORT: ${{ secrets.PORT }}
+          API_URL: ${{ secrets.API_URL }}
