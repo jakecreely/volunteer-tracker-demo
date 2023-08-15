@@ -897,6 +897,29 @@ describe("Training", () => {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
         })
+
+        test("An error during training retrieval should result in a response with status of 500", async () => {
+            let randTraining = randomTraining()
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+                name: randTraining.name,
+                renewalFrequency: randTraining.renewalFrequency,
+                excludedRoles: randTraining.excludedRoles
+            })
+
+            jest.spyOn(Training, 'findOne').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+            expect(error).not.toBeNull()
+            Training.findOne.mockRestore()
+        })
     })
 
     describe("POST /training", () => {
@@ -938,6 +961,27 @@ describe("Training", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
+        })
+
+        test("An error during training creation should result in a response with status of 500", async () => {
+            jest.spyOn(Training.prototype, 'save').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randomTraining().name,
+                    renewalFrequency: randomTraining().renewalFrequency,
+                    excludedRoles: randomTraining().excludedRoles
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Training.prototype.save.mockRestore()
         })
     })
 
@@ -1022,6 +1066,34 @@ describe("Training", () => {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
         })
+
+        test("An error during training update should result in a response with status of 500", async () => {
+            let randTraining = randomTraining()
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+                name: randTraining.name,
+                renewalFrequency: randTraining.renewalFrequency,
+                excludedRoles: randTraining.excludedRoles
+            })
+
+            jest.spyOn(Training, 'findOneAndUpdate').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, {
+                    name: randomTraining().name,
+                    renewalFrequency: randomTraining().renewalFrequency,
+                    excludedRoles: randomTraining().excludedRoles
+                })
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Training.findOneAndUpdate.mockRestore()
+        })
     })
 
     describe("DELETE /training/:id", () => {
@@ -1056,6 +1128,30 @@ describe("Training", () => {
             } catch (err) {
                 expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
             }
+        })
+
+        test("An error during training deletion should result in a response with status of 500", async () => {
+            let randTraining = randomTraining()
+            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+                name: randTraining.name,
+                renewalFrequency: randTraining.renewalFrequency,
+                excludedRoles: randTraining.excludedRoles
+            })
+
+            jest.spyOn(Training, 'findOneAndDelete').mockImplementation(() => {
+                throw new Error('Database Connection Error');
+            });
+
+            let error = null
+            try {
+                await axios.delete(process.env.API_URL + '/training/' + savedTraining.data._id)
+            } catch (err) {
+                error = err
+                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            }
+
+            expect(error).not.toBeNull()
+            Training.findOneAndDelete.mockRestore()
         })
     })
 })
