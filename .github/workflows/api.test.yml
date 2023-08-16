@@ -1,4 +1,4 @@
-name: Node.js CI
+name: API Tests
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  build:
+  install_and_test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -34,10 +34,10 @@ jobs:
           PORT: ${{ vars.PORT }}
           API_URL: ${{ vars.API_URL }}
 
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()    # run this step even if previous step failed
-        with:
-          name: JEST Tests            # Name of the check run which will be created
-          path: ./server/reports/jest-*.xml    # Path to test results
-          reporter: jest-junit        # Format of test results
+      # - name: Test Report
+      #   uses: dorny/test-reporter@v1
+      #   if: success() || failure()    # run this step even if previous step failed
+      #   with:
+      #     name: JEST Tests            # Name of the check run which will be created
+      #     path: ./server/reports/jest-*.xml    # Path to test results
+      #     reporter: jest-junit        # Format of test results
