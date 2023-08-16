@@ -34,5 +34,11 @@
     "portscanner": "^2.2.0",
     "request": "^2.88.2",
     "swagger-ui-express": "^4.6.2"
+  },
+  "jest-junit": {
+    "outputDirectory": "reports",
+    "outputName": "jest-junit.xml",
+    "ancestorSeparator": " › ",
+    "uniqueOutputName": "false"
   }
 }
