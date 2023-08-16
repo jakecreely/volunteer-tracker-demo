@@ -1,6 +1,6 @@
 const config = {
     verbose: true,
-    testResultsProcessor: "jest-junit"
+    reporters: [ "default", "jest-junit" ]
 }
 
 module.exports = config;
