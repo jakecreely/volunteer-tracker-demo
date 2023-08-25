@@ -9,12 +9,15 @@ const roleSchema = new mongoose.Schema({
   }
 });
 
+// Passed fields that are not part of the schema will be ignored
+// If nothing is passed, the role is not updated
+// Should only fail if the name field is invalid - e.g. empty string
 roleSchema.pre('findOneAndUpdate', async function (next) {
   try {
     const docToUpdate = await this.model.findOne(this.getQuery());
 
     if (docToUpdate === null) {
-      return next(new mongoose.Error.DocumentNotFoundError('No document found with that ID'));
+      throw new mongoose.Error.DocumentNotFoundError('No document found with that ID');
     }
 
     // Apply the update to a temporary document to avoid modifying the original document
@@ -24,7 +27,7 @@ roleSchema.pre('findOneAndUpdate', async function (next) {
     const updatedDoc = new this.model(updatedFields);
 
     // Validate the updated document against the schema
-    await updatedDoc.validate();
+    await updatedDoc.validate(); // This will throw an error if the name field is invalid (e.g. empty string)
 
     // If the name field has been modified, update all the awards in the Volunteer schema
     if (this.getUpdate().name) {
@@ -40,8 +43,6 @@ roleSchema.pre('findOneAndUpdate', async function (next) {
         {
           $set: { 'excludedRoles.$.name': updatedFields.name }
         })
-    } else {
-      throw new mongoose.Error.ValidationError('No name field provided');
     }
   } catch (error) {
     next(error);

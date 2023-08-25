@@ -91,7 +91,7 @@ router.put('/:id', async (req, res) => {
         res.status(HttpStatusCode.Ok).send(updatedVolunteer)
     } catch (err) {
         if (err instanceof mongoose.Error.ValidationError) {
-            res.status(HttpStatusCode.BadRequest).send(err.message)
+            res.status(HttpStatusCode.BadRequest).send(err.errors)
         } else if (err instanceof mongoose.Error.CastError) {
             res.status(HttpStatusCode.BadRequest).send('Provided ID is invalid')
         } else {
@@ -140,7 +140,11 @@ router.get('/awards/upcoming/:daysThreshold?', async (req, res) => {
         const result = await volunteerController.findUpcomingAwards(daysThreshold)
         res.status(HttpStatusCode.Ok).send(result)
     } catch (err) {
-        res.status(HttpStatusCode.InternalServerError).send(err.message)
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(HttpStatusCode.InternalServerError).send(err.message)
+        }
     }
 })
 

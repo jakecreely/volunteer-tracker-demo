@@ -11,6 +11,7 @@ const Award = require('../models/Award');
 const Role = require('../models/Role');
 const Training = require('../models/Training');
 const Document = require('../models/Document');
+const e = require('express');
 
 beforeAll(async () => {
     // await dbSetup()
@@ -354,12 +355,12 @@ describe("Awards", () => {
             }
 
             // This should update any volunteers with that award
-            const {data: updatedSavedAward} = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
+            const { data: updatedSavedAward } = await axios.put(process.env.API_URL + '/awards/' + savedAward.data._id, {
                 name: updatedAward.name,
                 requiredServiceLength: updatedAward.requiredServiceLength
             })
 
-            const {data: fetchedVolunteer} = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
+            const { data: fetchedVolunteer } = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
             expect(fetchedVolunteer.awards[0].name).toBe(updatedSavedAward.name)
         })
 
@@ -392,23 +393,27 @@ describe("Awards", () => {
     })
 
     describe('DELETE /awards/:id', () => {
-        test("When deleting an existing award, it should respond with status of 200", async () => {
-            let randAward = randomAward()
-            let savedAward = await axios.post(process.env.API_URL + '/awards', {
+        test("Deleting an existing award should return the deleted award and a status of 200", async () => {
+            const randAward = randomAward()
+            const savedAward = await axios.post(process.env.API_URL + '/awards', {
                 name: randAward.name,
                 requiredServiceLength: randAward.requiredServiceLength
             })
 
             const response = await axios.delete(process.env.API_URL + '/awards/' + savedAward.data._id)
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/awards/' + savedAward.data._id)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
+            expect(response.data.name).toBe(randAward.name)
+            expect(response.data.requiredServiceLength).toBe(randAward.requiredServiceLength)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When deleting a non-existent award with an invalid object ID, it should respond with status of 400", async () => {
+        test("Deleting a non-existent award with an invalid object ID should respond with a status of 400", async () => {
             const awardId = -1
             let error = null
             try {
@@ -420,7 +425,7 @@ describe("Awards", () => {
             expect(error).not.toBeNull()
         })
 
-        test("When deleting a non-existent award with a valid object ID, it should respond with status of 404", async () => {
+        test("Deleting a non-existent award with a valid object ID should respond with status of 404", async () => {
             const awardId = faker.database.mongodbObjectId()
             let error = null
             try {
@@ -448,9 +453,8 @@ describe("Awards", () => {
                 await axios.delete(process.env.API_URL + '/awards/' + savedAward.data._id)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
-
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             expect(error).not.toBeNull()
         })
     })
@@ -458,7 +462,7 @@ describe("Awards", () => {
 
 describe("Roles", () => {
     describe("GET /roles", () => {
-        test("When asked for a list of the roles, all should be received with a status of 200", async () => {
+        test("Retrieving all roles should return a list of roles and a status of 200", async () => {
             let numberOfRoles = 5
             let randomRoles = new Array(numberOfRoles)
             for (let i = 0; i < numberOfRoles; i++) {
@@ -491,7 +495,7 @@ describe("Roles", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of roles and an error occurs, a response of 404 should be received", async () => {
+        test("An error during roles retrieval should response with a status of 500", async () => {
             jest.spyOn(Role, 'find').mockImplementation(() => {
                 throw new Error('Database connection error');
             });
@@ -504,12 +508,19 @@ describe("Roles", () => {
 
             Role.find.mockRestore()
         })
+
+        test("When there are no roles available, an empty list should be returned", () => {
+            return axios.get(process.env.API_URL + '/roles').then(response => {
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+                expect(response.data).toStrictEqual([])
+            })
+        })
     })
 
     describe("GET /roles/:id", () => {
-        test("When asked for an existing role, it should retrieve it and respond with status of 200", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("When asked for an existing role with a valid object ID, it should respond with the role data and status of 200", async () => {
+            const randRole = randomRole()
+            const savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -520,7 +531,7 @@ describe("Roles", () => {
         })
 
         test("When asked for a non-existent role with an invalid object ID, it should respond with status of 400", async () => {
-            let roleId = -1
+            const roleId = -1
             try {
                 await axios.get(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
@@ -529,7 +540,7 @@ describe("Roles", () => {
         })
 
         test("When asked for a non-existent role with a valid object ID, it should respond with status of 404", async () => {
-            let roleId = faker.database.mongodbObjectId()
+            const roleId = faker.database.mongodbObjectId()
             try {
                 await axios.get(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
@@ -538,8 +549,8 @@ describe("Roles", () => {
         })
 
         test("An error during role retrieval should result in a response with status of 500", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+            const randRole = randomRole()
+            const savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -552,17 +563,17 @@ describe("Roles", () => {
                 await axios.get(process.env.API_URL + '/roles/' + savedRole.data._id)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
 
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Role.findOne.mockRestore()
         })
     })
 
     describe("POST /roles", () => {
-        test("When creating a new role with all required fields, it should respond with the created role and status of 201", async () => {
-            let randRole = randomRole()
+        test("Creating a new role with all required fields should respond with the created role and status of 201", async () => {
+            const randRole = randomRole()
             const response = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
@@ -571,12 +582,15 @@ describe("Roles", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Created)
         })
 
-        test("When creating a new role with missing required fields, it should respond with status of 400", async () => {
+        test("Creating a new role with missing required fields should respond with status of 400", async () => {
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/roles', {})
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
         test("An error during role creation should result in a response with status of 500", async () => {
@@ -591,18 +605,18 @@ describe("Roles", () => {
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
 
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Role.prototype.save.mockRestore()
         })
     })
 
     describe("PUT /roles/:id", () => {
-        test("When updating an existing role with all required fields, it should respond with the updated role and status of 200", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Updating an existing role with all required fields should respond with the updated role and status of 200", async () => {
+            const randRole = randomRole()
+            const savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -619,58 +633,66 @@ describe("Roles", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When updating an existing role with missing required fields, it should respond with status of 400", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Updating an existing role with invalid required fields should respond with status of 400", async () => {
+            const randRole = randomRole()
+            const savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
+            let error = null
             try {
-                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {})
+                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {name: ""})
             } catch (err) {
-                //TODO: Should be 400, but it's 500 - need to check the body before trying to update
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent role with an invalid object ID, it should respond with status of 400", async () => {
-            let roleId = -1
+        test("Updating a non-existent role with an invalid object ID should respond with status of 400", async () => {
+            const roleId = -1
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/roles/' + roleId, {
                     name: randomRole().name
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent role with a valid object ID, it should respond with status of 404", async () => {
-            let roleId = faker.database.mongodbObjectId()
+        test("Updating a non-existent role with a valid object ID should respond with status of 404", async () => {
+            const roleId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/roles/' + roleId, {
                     name: randomRole().name
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
-        test("When updating the name of a role, it should update the name of the role in volunteers", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Updating the name of a role should update the name of the role in volunteers", async () => {
+            const randRole = randomRole()
+            const { data: savedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
                 breakDuration: randVolunteer.breakDuration,
                 isArchived: randVolunteer.isArchived,
                 roles: [{
-                    roleId: savedRole.data._id,
-                    name: savedRole.data.name,
+                    roleId: savedRole._id,
+                    name: savedRole.name,
                 }],
                 documents: randVolunteer.documents,
                 awards: randVolunteer.awards,
@@ -678,50 +700,50 @@ describe("Roles", () => {
             })
 
             let updatedRole = randomRole()
-            while (updatedRole.name === savedRole.data.name) {
+            while (updatedRole.name === savedRole.name) {
                 updatedRole = randomRole()
             }
 
-            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
+            const { data: updatedSavedRole } = await axios.put(process.env.API_URL + '/roles/' + savedRole._id, {
                 name: updatedRole.name
             })
 
-            let response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
-            expect(response.data.roles[0].name).toBe(updatedSavedRole.data.name)
+            const { data: fetchedVolunteer } = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer._id)
+            expect(fetchedVolunteer.roles[0].name).toBe(updatedSavedRole.name)
         })
 
-        test("When updating the name of a role, it should update the name of the role in excluded roles in training", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Updating the name of a role should update the name of the role in excluded roles in training", async () => {
+            const randRole = randomRole()
+            const { data: savedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: [{
-                    roleId: savedRole.data._id,
-                    name: savedRole.data.name
+                    roleId: savedRole._id,
+                    name: savedRole.name
                 }]
             })
 
             let updatedRole = randomRole()
-            while (updatedRole.name === savedRole.data.name) {
+            while (updatedRole.name === savedRole.name) {
                 updatedRole = randomRole()
             }
 
-            let updatedSavedRole = await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {
+            const { data: updatedSavedRole } = await axios.put(process.env.API_URL + '/roles/' + savedRole._id, {
                 name: updatedRole.name
             })
 
-            let response = await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
-            expect(response.data.excludedRoles[0].name).toBe(updatedSavedRole.data.name)
+            let { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training/' + savedTraining._id)
+            expect(fetchedTraining.excludedRoles[0].name).toBe(updatedSavedRole.name)
         })
 
         test("An error during role update should result in a response with status of 500", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+            const randRole = randomRole()
+            const savedRole = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -736,47 +758,53 @@ describe("Roles", () => {
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
 
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Role.findOneAndUpdate.mockRestore()
         })
     })
 
     describe("DELETE /roles/:id", () => {
-        test("When deleting an existing role, it should respond with the deleted roles and status of 200", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Deleting an existing role should respond with the deleted roles and status of 200", async () => {
+            const randRole = randomRole()
+            const { data: savedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
-            const response = await axios.delete(process.env.API_URL + '/roles/' + savedRole.data._id)
+            const response = await axios.delete(process.env.API_URL + '/roles/' + savedRole._id)
             expect(response.data.name).toBe(randRole.name)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When deleting a non-existent role with an invalid object ID, it should respond with status of 400", async () => {
-            let roleId = -1
+        test("Deleting a non-existent role with an invalid object ID should respond with status of 400", async () => {
+            const roleId = -1
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When deleting a non-existent role with a valid object ID, it should respond with status of 404", async () => {
-            let roleId = faker.database.mongodbObjectId()
+        test("Deleting a non-existent role with a valid object ID should respond with status of 404", async () => {
+            const roleId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/roles/' + roleId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during role deletion should result in a response with status of 500", async () => {
-            let randRole = randomRole()
-            let savedRole = await axios.post(process.env.API_URL + '/roles', {
+            const randRole = randomRole()
+            const { data: savedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: randRole.name
             })
 
@@ -786,13 +814,13 @@ describe("Roles", () => {
 
             let error = null
             try {
-                await axios.delete(process.env.API_URL + '/roles/' + savedRole.data._id)
+                await axios.delete(process.env.API_URL + '/roles/' + savedRole._id)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
 
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Role.findOneAndDelete.mockRestore()
         })
     })
@@ -800,14 +828,14 @@ describe("Roles", () => {
 
 describe("Training", () => {
     describe("GET /training", () => {
-        test("When asked for a list of the training, all should be received with a status of 200", async () => {
-            let excludedRole = randomRole()
-            let savedExcludedRole = await axios.post(process.env.API_URL + '/roles', {
+        test("Retrieving all training should return a list of awards with a status of 200", async () => {
+            const excludedRole = randomRole()
+            const { data: savedExcludedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: excludedRole.name
             })
 
-            let numberOfTraining = 10
-            let randomTrainings = new Array(numberOfTraining)
+            const numberOfTraining = 10
+            const randomTrainings = new Array(numberOfTraining)
             for (let i = 0; i < numberOfTraining; i++) {
                 randomTrainings[i] = randomTraining()
             }
@@ -819,8 +847,8 @@ describe("Training", () => {
             for (let i = 0; i < numberOfTraining; i++) {
                 if (i % 2 === 0) {
                     randomTrainings[i].excludedRoles = [{
-                        roleId: savedExcludedRole.data._id,
-                        name: savedExcludedRole.data.name
+                        roleId: savedExcludedRole._id,
+                        name: savedExcludedRole.name
                     }]
                 }
                 await axios.post(process.env.API_URL + '/training', {
@@ -836,40 +864,44 @@ describe("Training", () => {
                 expect(response.data[i].name).toBe(randomTrainings[i].name)
                 expect(response.data[i].renewalFrequency).toBe(randomTrainings[i].renewalFrequency)
                 if (i % 2 === 0) {
-                    expect(response.data[i].excludedRoles[0].name).toBe(savedExcludedRole.data.name)
-                    expect(response.data[i].excludedRoles[0].roleId).toBe(savedExcludedRole.data._id)
+                    expect(response.data[i].excludedRoles[0].name).toBe(savedExcludedRole.name)
+                    expect(response.data[i].excludedRoles[0].roleId).toBe(savedExcludedRole._id)
                 }
                 else {
                     expect(response.data[i].excludedRoles).toStrictEqual(randomTrainings[i].excludedRoles)
                 }
             }
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of training and an error occurs, a response of 404 should be received", async () => {
+        test("An error during training retrieval should response in a status of 404", async () => {
             jest.spyOn(Training, 'find').mockImplementation(() => {
                 throw new Error('Database connection error');
             });
 
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/training')
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+                error = err
             }
 
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Training.find.mockRestore()
         })
     })
 
     describe("GET /training/:id", () => {
-        test("When asked for an existing training, it should retrieve it and respond with status of 200", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+        test("Retrieving an existing training should respond with the training and a status of 200", async () => {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
-            const response = await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
+            const response = await axios.get(process.env.API_URL + '/training/' + savedTraining._id)
 
             expect(response.data.name).toBe(randTraining.name)
             expect(response.data.renewalFrequency).toBe(randTraining.renewalFrequency)
@@ -877,27 +909,33 @@ describe("Training", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a non-existent training with an invalid object ID, it should respond with status of 400", async () => {
-            let trainingId = -1
+        test("Retrieving a non-existent training with an invalid object ID should respond with status of 400", async () => {
+            const trainingId = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When asked for a non-existent training with a valid object ID, it should respond with status of 404", async () => {
-            let trainingId = faker.database.mongodbObjectId()
+        test("Retrieving a non-existent training with a valid object ID should respond with status of 404", async () => {
+            const trainingId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during training retrieval should result in a response with status of 500", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
@@ -909,19 +947,19 @@ describe("Training", () => {
 
             let error = null
             try {
-                await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
+                await axios.get(process.env.API_URL + '/training/' + savedTraining._id)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Training.findOne.mockRestore()
         })
     })
 
     describe("POST /training", () => {
-        test("When creating a new training with all required fields, it should respond with the created training and status of 201", async () => {
-            let randTraining = randomTraining()
+        test("Creating a new training with all required fields should respond with the created training and status of 201", async () => {
+            const randTraining = randomTraining()
             const response = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
@@ -934,21 +972,25 @@ describe("Training", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Created)
         })
 
-        test("When creating a new training with missing required fields, it should respond with status of 400", async () => {
+        test("Creating a new training with missing required fields should respond with status of 400", async () => {
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/training', { invalid: 'invalid' })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When creating a new training with an invalid role ID, it should respond with status of 400", async () => {
+        test("Creating a new training with an invalid role ID should respond with status of 400", async () => {
             let randTraining = randomTraining()
             randTraining.excludedRoles = [{
                 roleId: -1,
                 name: randomRole().name
             }]
 
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/training', {
                     name: randTraining.name,
@@ -956,8 +998,10 @@ describe("Training", () => {
                     excludedRoles: randTraining.excludedRoles
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
         test("An error during training creation should result in a response with status of 500", async () => {
@@ -974,39 +1018,38 @@ describe("Training", () => {
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
-
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Training.prototype.save.mockRestore()
         })
     })
 
     describe("PUT /training/:id", () => {
-        test("When updating an existing training with all required fields, it should respond with the updated training and status of 200", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+        test("Updating an existing training with all required fields should respond with the updated training and status of 200", async () => {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
-            let excludedRole = randomRole()
-            let savedExcludedRole = await axios.post(process.env.API_URL + '/roles', {
+            const excludedRole = randomRole()
+            let { data: savedExcludedRole } = await axios.post(process.env.API_URL + '/roles', {
                 name: excludedRole.name
             })
 
             let updatedTraining = randomTraining()
-            while (updatedTraining.name === savedTraining.data.name) {
+            while (updatedTraining.name === savedTraining.name) {
                 updatedTraining = randomTraining()
             }
 
             updatedTraining.excludedRoles = [{
-                roleId: savedExcludedRole.data._id,
-                name: savedExcludedRole.data.name
+                roleId: savedExcludedRole._id,
+                name: savedExcludedRole.name
             }]
 
-            const response = await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, {
+            const response = await axios.put(process.env.API_URL + '/training/' + savedTraining._id, {
                 name: updatedTraining.name,
                 renewalFrequency: updatedTraining.renewalFrequency,
                 excludedRoles: updatedTraining.excludedRoles
@@ -1014,32 +1057,46 @@ describe("Training", () => {
 
             expect(response.data.name).toBe(updatedTraining.name)
             expect(response.data.renewalFrequency).toBe(updatedTraining.renewalFrequency)
-            expect(response.data.excludedRoles[0].name).toBe(savedExcludedRole.data.name)
-            expect(response.data.excludedRoles[0].roleId).toBe(savedExcludedRole.data._id)
+            expect(response.data.excludedRoles[0].name).toBe(savedExcludedRole.name)
+            expect(response.data.excludedRoles[0].roleId).toBe(savedExcludedRole._id)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When updating an existing training with missing required fields, it should respond with status of 400 and the training should be unchanged", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+        test("Updating an existing training with invalid required fields should respond with status of 400 and the training should be unchanged", async () => {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
+            let error = null
             try {
-                await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, { invalid: 'invalid' })
+                await axios.put(process.env.API_URL + '/training/' + savedTraining._id, { name: "" })
             } catch (err) {
-                let response = await axios.get(process.env.API_URL + '/training/' + savedTraining.data._id)
-                expect(response.data.name).toBe(randTraining.name)
-                expect(response.data.renewalFrequency).toBe(randTraining.renewalFrequency)
-                expect(response.data.excludedRoles).toStrictEqual(randTraining.excludedRoles)
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
+
+            error = null
+            try {
+                await axios.put(process.env.API_URL + '/training/' + savedTraining._id, { renewalFrequency: -1 })
+            } catch (err) {
+                error = err
+            }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
+
+            const { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training/' + savedTraining._id)
+            expect(fetchedTraining.name).toBe(randTraining.name)
+            expect(fetchedTraining.renewalFrequency).toBe(randTraining.renewalFrequency)
+            expect(fetchedTraining.excludedRoles).toStrictEqual(randTraining.excludedRoles)
         })
 
-        test("When updating a non-existent training with an invalid object ID, it should respond with status of 400", async () => {
-            let trainingId = -1
+        test("Updating a non-existent training with an invalid object ID should respond with status of 400", async () => {
+            const trainingId = -1
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/training/' + trainingId, {
                     name: randomTraining().name,
@@ -1047,12 +1104,15 @@ describe("Training", () => {
                     excludedRoles: randomTraining().excludedRoles
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent training with a valid object ID, it should respond with status of 404", async () => {
-            let trainingId = faker.database.mongodbObjectId()
+        test("Updating a non-existent training with a valid object ID should respond with status of 404", async () => {
+            const trainingId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/training/' + trainingId, {
                     name: randomTraining().name,
@@ -1060,13 +1120,15 @@ describe("Training", () => {
                     excludedRoles: randomTraining().excludedRoles
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during training update should result in a response with status of 500", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
@@ -1078,58 +1140,64 @@ describe("Training", () => {
 
             let error = null
             try {
-                await axios.put(process.env.API_URL + '/training/' + savedTraining.data._id, {
+                await axios.put(process.env.API_URL + '/training/' + savedTraining._id, {
                     name: randomTraining().name,
                     renewalFrequency: randomTraining().renewalFrequency,
                     excludedRoles: randomTraining().excludedRoles
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
 
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Training.findOneAndUpdate.mockRestore()
         })
     })
 
     describe("DELETE /training/:id", () => {
-        test("When deleting an existing training, it should respond with the deleted training and status of 200", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+        test("Deleting an existing training should respond with the deleted training and status of 200", async () => {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
             })
 
-            const response = await axios.delete(process.env.API_URL + '/training/' + savedTraining.data._id)
-            expect(response.data.name).toBe(savedTraining.data.name)
-            expect(response.data.renewalFrequency).toBe(savedTraining.data.renewalFrequency)
-            expect(response.data.excludedRoles).toStrictEqual(savedTraining.data.excludedRoles)
+            const response = await axios.delete(process.env.API_URL + '/training/' + savedTraining._id)
+            expect(response.data.name).toBe(savedTraining.name)
+            expect(response.data.renewalFrequency).toBe(savedTraining.renewalFrequency)
+            expect(response.data.excludedRoles).toStrictEqual(savedTraining.excludedRoles)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When deleting a non-existent training with an invalid object ID, it should respond with status of 400", async () => {
-            let trainingId = -1
+        test("Deleting a non-existent training with an invalid object ID should respond with status of 400", async () => {
+            const trainingId = -1
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When deleting a non-existent training with a valid object ID, it should respond with status of 404", async () => {
-            let trainingId = faker.database.mongodbObjectId()
+        test("Deleting a non-existent training with a valid object ID should respond with status of 404", async () => {
+            const trainingId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/training/' + trainingId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during training deletion should result in a response with status of 500", async () => {
-            let randTraining = randomTraining()
-            let savedTraining = await axios.post(process.env.API_URL + '/training', {
+            const randTraining = randomTraining()
+            const { data: savedTraining } = await axios.post(process.env.API_URL + '/training', {
                 name: randTraining.name,
                 renewalFrequency: randTraining.renewalFrequency,
                 excludedRoles: randTraining.excludedRoles
@@ -1141,13 +1209,12 @@ describe("Training", () => {
 
             let error = null
             try {
-                await axios.delete(process.env.API_URL + '/training/' + savedTraining.data._id)
+                await axios.delete(process.env.API_URL + '/training/' + savedTraining._id)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
-
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Training.findOneAndDelete.mockRestore()
         })
     })
@@ -1155,9 +1222,9 @@ describe("Training", () => {
 
 describe("Documents", () => {
     describe("GET /documents", () => {
-        test("When asked for a list of the documents, all should be received with a status of 200", async () => {
-            let numberOfDocuments = 5
-            let randomDocuments = new Array(numberOfDocuments)
+        test("Retrieving all documents should respond with a list of roles and a status of 200", async () => {
+            const numberOfDocuments = 5
+            const randomDocuments = new Array(numberOfDocuments)
             for (let i = 0; i < numberOfDocuments; i++) {
                 randomDocuments[i] = randomDocument()
                 await axios.post(process.env.API_URL + '/documents', {
@@ -1190,50 +1257,59 @@ describe("Documents", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of documents and an error occurs, a response of 404 should be received", async () => {
+        test("An error during document retrieval should response with a status of 404", async () => {
             jest.spyOn(Document, 'find').mockImplementationOnce(() => {
                 throw new Error('Database connection error');
             });
 
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/documents')
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+                error = err
             }
 
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Document.find.mockRestore();
         })
     })
 
     describe("GET /documents/:id", () => {
-        test("When asked for an existing document, it should retrieve it and respond with status of 200", async () => {
-            let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
+        test("Retrieving an existing document should retrieve it with status of 200", async () => {
+            const randDocument = randomDocument()
+            const { data: savedDocument } = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
-            const response = await axios.get(process.env.API_URL + '/documents/' + savedDocument.data._id)
+            const response = await axios.get(process.env.API_URL + '/documents/' + savedDocument._id)
 
             expect(response.data.name).toBe(randDocument.name)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a non-existent document with an invalid object ID, it should respond with status of 400", async () => {
-            let documentId = -1
+        test("Retrieving a non-existent document with an invalid object ID should respond with status of 400", async () => {
+            const documentId = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When asked for a non-existent document with a valid object ID, it should respond with status of 404", async () => {
-            let documentId = faker.database.mongodbObjectId()
+        test("Retrieving a non-existent document with a valid object ID should respond with status of 404", async () => {
+            const documentId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during document retrieval should respond with a status of 500", async () => {
@@ -1246,17 +1322,16 @@ describe("Documents", () => {
                 await axios.get(process.env.API_URL + '/documents/' + faker.database.mongodbObjectId())
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
             expect(error).not.toBeNull()
-
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Document.findOne.mockRestore()
         })
     })
 
     describe("POST /documents", () => {
-        test("When creating a new document with all required fields, it should respond with the created document and status of 201", async () => {
-            let randDocument = randomDocument()
+        test("Creating a new document with all required fields should respond with the created document and status of 201", async () => {
+            const randDocument = randomDocument()
             const response = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
@@ -1265,12 +1340,15 @@ describe("Documents", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Created)
         })
 
-        test("When creating a new document with missing required fields, it should respond with status of 400", async () => {
+        test("Creating a new document with missing required fields should respond with status of 400", async () => {
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/documents', {})
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
         test("An error during document creation should respond with a status of 500", async () => {
@@ -1285,27 +1363,26 @@ describe("Documents", () => {
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
             expect(error).not.toBeNull()
-
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Document.prototype.save.mockRestore()
         })
     })
 
     describe("PUT /documents/:id", () => {
-        test("When updating an existing document with all required fields, it should respond with the updated document and status of 200", async () => {
-            let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
+        test("Updating an existing document with all required fields should respond with the updated document and status of 200", async () => {
+            const randDocument = randomDocument()
+            const { data: savedDocument } = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
             let updatedDocument = randomDocument()
-            while (updatedDocument.name === savedDocument.data.name) {
+            while (updatedDocument.name === savedDocument.name) {
                 updatedDocument = randomDocument()
             }
 
-            const response = await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, {
+            const response = await axios.put(process.env.API_URL + '/documents/' + savedDocument._id, {
                 name: updatedDocument.name,
             })
 
@@ -1313,49 +1390,58 @@ describe("Documents", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When updating an existing document with missing required fields, it should respond with status of 400", async () => {
-            let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
+        test("Updating an existing document with invalid required fields should respond with status of 400", async () => {
+            const randDocument = randomDocument()
+            const { data: savedDocument } = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
+            let error = null
             try {
-                await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, { invalid: "invalid" }) // When this empty, it's a 500
+                await axios.put(process.env.API_URL + '/documents/' + savedDocument._id, { name: "" }) // When this empty, it's a 500
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent document with an invalid object ID, it should respond with status of 400", async () => {
-            let documentId = -1
+        test("Updating a non-existent document with an invalid object ID should respond with status of 400", async () => {
+            const documentId = -1
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/documents/' + documentId, {
                     name: randomDocument().name,
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent document with a valid object ID, it should respond with status of 404", async () => {
-            let documentId = faker.database.mongodbObjectId()
+        test("Updating a non-existent document with a valid object ID should respond with status of 404", async () => {
+            const documentId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/documents/' + documentId, {
                     name: randomDocument().name,
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
-        test("When updating the name of a document, it should update the name of the document in volunteers", async () => {
-            let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
+        test("Updating the name of a document should update the name of the document in volunteers", async () => {
+            const randDocument = randomDocument()
+            const { data: savedDocument } = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -1363,8 +1449,8 @@ describe("Documents", () => {
                 isArchived: randVolunteer.isArchived,
                 roles: randVolunteer.roles,
                 documents: [{
-                    documentId: savedDocument.data._id,
-                    name: savedDocument.data.name,
+                    documentId: savedDocument._id,
+                    name: savedDocument.name,
                     isProvided: faker.datatype.boolean()
                 }],
                 awards: randVolunteer.awards,
@@ -1372,16 +1458,16 @@ describe("Documents", () => {
             })
 
             let updatedDocument = randomDocument()
-            while (updatedDocument.name === savedDocument.data.name) {
+            while (updatedDocument.name === savedDocument.name) {
                 updatedDocument = randomDocument()
             }
 
-            let updatedSavedDocument = await axios.put(process.env.API_URL + '/documents/' + savedDocument.data._id, {
+            let { data: updatedSavedDocument } = await axios.put(process.env.API_URL + '/documents/' + savedDocument._id, {
                 name: updatedDocument.name,
             })
 
-            let response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
-            expect(response.data.documents[0].name).toBe(updatedSavedDocument.data.name)
+            let { data: fetchedVolunteer } = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer._id)
+            expect(fetchedVolunteer.documents[0].name).toBe(updatedSavedDocument.name)
         })
 
         test("An error during document update should respond with a status of 500", async () => {
@@ -1396,42 +1482,47 @@ describe("Documents", () => {
                 })
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
             expect(error).not.toBeNull()
-
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Document.findOneAndUpdate.mockRestore()
         })
     })
 
     describe("DELETE /documents/:id", () => {
-        test("When deleting an existing document, it should respond with the deleted document and status of 200", async () => {
-            let randDocument = randomDocument()
-            let savedDocument = await axios.post(process.env.API_URL + '/documents', {
+        test("Deleting an existing document should respond with the deleted document and status of 200", async () => {
+            const randDocument = randomDocument()
+            const { data: savedDocument } = await axios.post(process.env.API_URL + '/documents', {
                 name: randDocument.name,
             })
 
-            const response = await axios.delete(process.env.API_URL + '/documents/' + savedDocument.data._id)
+            const response = await axios.delete(process.env.API_URL + '/documents/' + savedDocument._id)
             expect(response.data.name).toBe(randDocument.name)
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When deleting a non-existent document with an invalid object ID, it should respond with status of 400", async () => {
-            let documentId = -1
+        test("Deleting a non-existent document with an invalid object ID should respond with status of 400", async () => {
+            const documentId = -1
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When deleting a non-existent document with a valid object ID, it should respond with status of 404", async () => {
-            let documentId = faker.database.mongodbObjectId()
+        test("Deleting a non-existent document with a valid object ID should respond with status of 404", async () => {
+            const documentId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/documents/' + documentId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("An error during document deletion should respond with a status of 500", async () => {
@@ -1444,10 +1535,9 @@ describe("Documents", () => {
                 await axios.delete(process.env.API_URL + '/documents/' + faker.database.mongodbObjectId())
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             }
             expect(error).not.toBeNull()
-
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Document.findOneAndDelete.mockRestore()
         })
     })
@@ -1455,9 +1545,9 @@ describe("Documents", () => {
 
 describe("Volunteers", () => {
     describe("GET /volunteers", () => {
-        test("When asked for a list of the volunteers, all should be received with a status of 200", async () => {
-            let numberOfVolunteers = 5
-            let randomVolunteers = new Array(numberOfVolunteers)
+        test("Retrieving all volunteers should return a list of volunteers with a status of 200", async () => {
+            const numberOfVolunteers = 5
+            const randomVolunteers = new Array(numberOfVolunteers)
             for (let i = 0; i < numberOfVolunteers; i++) {
                 randomVolunteers[i] = randomVolunteer()
 
@@ -1502,28 +1592,30 @@ describe("Volunteers", () => {
                 expect(response.data[i].training).toStrictEqual(randomVolunteers[i].training)
             }
 
-            expect(response.status).toBe(200)
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of volunteers and an error occurs, a response of 500 should be received", async () => {
+        test("An error during volunteer retrieval should response with a status of 500", async () => {
             jest.spyOn(Volunteer, 'find').mockImplementation(() => {
                 throw new Error('Database connection error');
             });
 
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers')
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+                error = err
             }
-
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Volunteer.find.mockRestore();
         })
     })
 
     describe("GET /volunteers/:id", () => {
-        test("When asked for an existing volunteer, it should retrieve it and respond with status of 200", async () => {
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+        test("Retrieving an existing volunteer should respond with the volunteer with status of 200", async () => {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -1535,7 +1627,7 @@ describe("Volunteers", () => {
                 training: randVolunteer.training
             })
 
-            const response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
+            const response = await axios.get(process.env.API_URL + '/volunteers/' + savedVolunteer._id)
 
             expect(response.data.name).toBe(randVolunteer.name)
             expect(response.data.startDate).toBe(randVolunteer.startDate)
@@ -1549,28 +1641,34 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a non-existent volunteer with an invalid object ID, it should respond with status of 400", async () => {
-            let volunteerId = -1
+        test("Retrieving a non-existent volunteer with an invalid object ID should respond with status of 400", async () => {
+            const volunteerId = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + volunteerId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When asked for a non-existent volunteer with a valid object ID, it should respond with status of 404", async () => {
-            let volunteerId = faker.database.mongodbObjectId()
+        test("Retrieving a non-existent volunteer with a valid object ID should respond with status of 404", async () => {
+            const volunteerId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + volunteerId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
     })
 
     describe("POST /volunteers", () => {
-        test("When creating a new volunteer with all required fields, it should respond with the created volunteer and status of 201", async () => {
-            let randVolunteer = randomVolunteer()
+        test("Creating a new volunteer with all required fields should respond with the created volunteer and status of 201", async () => {
+            const randVolunteer = randomVolunteer()
             const response = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
@@ -1595,21 +1693,24 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Created)
         })
 
-        test("When creating a new volunteer with missing required fields, it should respond with status of 400", async () => {
+        test("Creating a new volunteer with missing required fields should respond with status of 400", async () => {
+            let error = null
             try {
                 await axios.post(process.env.API_URL + '/volunteers', {})
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
         // Testing with invalid role ID, trainig ID etc
     })
 
     describe("PUT /volunteers/:id", () => {
-        test("When updating an existing volunteer with all required fields, it should respond with the updated volunteer and status of 200", async () => {
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+        test("Updating an existing volunteer with all required fields should respond with the updated volunteer and status of 200", async () => {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -1621,9 +1722,9 @@ describe("Volunteers", () => {
                 training: randVolunteer.training
             })
 
-            let updatedVolunteer = randomVolunteer()
+            const updatedVolunteer = randomVolunteer()
 
-            const response = await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id, {
+            const response = await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer._id, {
                 name: updatedVolunteer.name,
                 startDate: updatedVolunteer.startDate,
                 birthday: updatedVolunteer.birthday,
@@ -1647,9 +1748,9 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When updating an existing volunteer with missing required fields, it should respond with status of 400", async () => {
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+        test("Updating an existing volunteer with invalid required fields should respond with status of 400", async () => {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -1661,16 +1762,31 @@ describe("Volunteers", () => {
                 training: randVolunteer.training
             })
 
+            let error = null
             try {
-                await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id, { invalid: 'invalid' })
+                await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer._id,  {
+                    name: "",
+                    startDate: "",
+                    birthday: "",
+                    breakDuration: -1,
+                    isArchived: null,
+                    roles: null,
+                    documents: null,
+                    awards: null,
+                    training: null
+                })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            //TODO - Check for specific error messages
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent volunteer with an invalid object ID, it should respond with status of 400", async () => {
-            let volunteerId = -1
-            let randVolunteer = randomVolunteer()
+        test("Updating a non-existent volunteer with an invalid object ID should respond with status of 400", async () => {
+            const volunteerId = -1
+            const randVolunteer = randomVolunteer()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/volunteers/' + volunteerId, {
                     name: randVolunteer.name,
@@ -1684,13 +1800,16 @@ describe("Volunteers", () => {
                     training: randVolunteer.training
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When updating a non-existent volunteer with a valid object ID, it should respond with status of 404", async () => {
-            let volunteerId = faker.database.mongodbObjectId()
-            let randVolunteer = randomVolunteer()
+        test("Upading a non-existent volunteer with a valid object ID should respond with status of 404", async () => {
+            const volunteerId = faker.database.mongodbObjectId()
+            const randVolunteer = randomVolunteer()
+            let error = null
             try {
                 await axios.put(process.env.API_URL + '/volunteers/' + volunteerId, {
                     name: randVolunteer.name,
@@ -1704,15 +1823,17 @@ describe("Volunteers", () => {
                     training: randVolunteer.training
                 })
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
     })
 
     describe("DELETE /volunteers/:id", () => {
-        test("When deleting an existing volunteer, it should respond with the deleted volunteer and status of 200", async () => {
-            let randVolunteer = randomVolunteer()
-            let savedVolunteer = await axios.post(process.env.API_URL + '/volunteers', {
+        test("Deleting an existing volunteer should respond with the deleted volunteer and status of 200", async () => {
+            const randVolunteer = randomVolunteer()
+            const { data: savedVolunteer } = await axios.post(process.env.API_URL + '/volunteers', {
                 name: randVolunteer.name,
                 startDate: randVolunteer.startDate,
                 birthday: randVolunteer.birthday,
@@ -1724,7 +1845,7 @@ describe("Volunteers", () => {
                 training: randVolunteer.training
             })
 
-            const response = await axios.delete(process.env.API_URL + '/volunteers/' + savedVolunteer.data._id)
+            const response = await axios.delete(process.env.API_URL + '/volunteers/' + savedVolunteer._id)
             expect(response.data.name).toBe(randVolunteer.name)
             expect(response.data.startDate).toBe(randVolunteer.startDate)
             expect(response.data.birthday).toBe(randVolunteer.birthday)
@@ -1737,86 +1858,88 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When deleting a non-existent volunteer with an invalid object ID, it should respond with status of 400", async () => {
-            let volunteerId = -1
+        test("Deleting a non-existent volunteer with an invalid object ID, it should respond with status of 400", async () => {
+            const volunteerId = -1
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/volunteers/' + volunteerId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When deleting a non-existent volunteer with a valid object ID, it should respond with status of 404", async () => {
-            let volunteerId = faker.database.mongodbObjectId()
+        test("Deleting a non-existent volunteer with a valid object ID should respond with status of 404", async () => {
+            const volunteerId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.delete(process.env.API_URL + '/volunteers/' + volunteerId)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
     })
 
     describe("GET /volunteers/outstanding-documents", () => {
         // No outstanding
-        test("When asked and volunteers have no outstanding or missing documents, all volunteers should be returned with empty missing and outstanding document arrays and with a status of 200", async () => {
-            try {
-                let numberOfDocuments = 5
-                for (let i = 0; i < numberOfDocuments; i++) {
-                    let randDocument = randomDocument()
-                    await axios.post(process.env.API_URL + '/documents', {
-                        name: randDocument.name,
+        test("When volunteers with no outstanding or missing documents should be returned all volunteers with empty missing and outstanding document arrays with a status of 200", async () => {
+            const numberOfDocuments = 5
+            for (let i = 0; i < numberOfDocuments; i++) {
+                let randDocument = randomDocument()
+                await axios.post(process.env.API_URL + '/documents', {
+                    name: randDocument.name,
+                })
+            }
+
+
+            const res = await axios.get(process.env.API_URL + '/documents')
+            const randomDocuments = res.data
+
+            const numberOfVolunteers = 10
+            let randomVolunteers = new Array(numberOfVolunteers)
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                let randVolunteer = randomVolunteer()
+                for (let i = 0; i < randomDocuments.length; i++) {
+                    randVolunteer.documents.push({
+                        documentId: randomDocuments[i]._id,
+                        name: randomDocuments[i].name,
+                        isProvided: true
                     })
                 }
 
+                randomVolunteers[i] = randVolunteer
+                await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randVolunteer.name,
+                    startDate: randVolunteer.startDate,
+                    birthday: randVolunteer.birthday, //Currently toISOString() format
+                    breakDuration: randVolunteer.breakDuration,
+                    isArchived: randVolunteer.isArchived,
+                    roles: randVolunteer.roles,
+                    documents: randVolunteer.documents,
+                    awards: randVolunteer.awards,
+                    training: randVolunteer.training
+                })
+            }
 
-                const res = await axios.get(process.env.API_URL + '/documents')
-                const randomDocuments = res.data
+            // sort random volunteers by start date
+            randomVolunteers.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
-                let numberOfVolunteers = 10
-                let randomVolunteers = new Array(numberOfVolunteers)
-                for (let i = 0; i < numberOfVolunteers; i++) {
-                    let randVolunteer = randomVolunteer()
-                    for (let i = 0; i < randomDocuments.length; i++) {
-                        randVolunteer.documents.push({
-                            documentId: randomDocuments[i]._id,
-                            name: randomDocuments[i].name,
-                            isProvided: true
-                        })
-                    }
-
-                    randomVolunteers[i] = randVolunteer
-                    await axios.post(process.env.API_URL + '/volunteers', {
-                        name: randVolunteer.name,
-                        startDate: randVolunteer.startDate,
-                        birthday: randVolunteer.birthday, //Currently toISOString() format
-                        breakDuration: randVolunteer.breakDuration,
-                        isArchived: randVolunteer.isArchived,
-                        roles: randVolunteer.roles,
-                        documents: randVolunteer.documents,
-                        awards: randVolunteer.awards,
-                        training: randVolunteer.training
-                    })
-                }
-
-                // sort random volunteers by start date
-                randomVolunteers.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-
-                const response = await axios.get(process.env.API_URL + '/volunteers/outstanding-documents')
-                for (let i = 0; i < numberOfVolunteers; i++) {
-                    expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
-                    //expect(response.data[i].volunteer._id).toBe(randomVolunteers[i].id) ID is auto generated
-                    expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
-                    expect(response.data[i].missingDocuments.length).toBe(0)
-                    expect(response.data[i].outstandingDocuments.length).toBe(0)
-                    expect(response.status).toBe(axios.HttpStatusCode.Ok)
-                }
-            } catch (err) {
-                console.log(err)
+            const response = await axios.get(process.env.API_URL + '/volunteers/outstanding-documents')
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                expect(response.data[i].volunteer.name).toBe(randomVolunteers[i].name)
+                //expect(response.data[i].volunteer._id).toBe(randomVolunteers[i].id) ID is auto generated
+                expect(response.data[i].volunteer.isArchived).toBe(randomVolunteers[i].isArchived)
+                expect(response.data[i].missingDocuments.length).toBe(0)
+                expect(response.data[i].outstandingDocuments.length).toBe(0)
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
             }
         })
 
-        test("When asked and volunteers have no outstanding documents but missing documents, all volunteers should be returned with empty outstanding document array and full missing documents array and with a status of 200", async () => {
-            let numberOfDocuments = 5
+        test("When volunteers have no outstanding documents but missing documents, all volunteers should be returned with empty outstanding document array and full missing documents array and with a status of 200", async () => {
+            const numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
                 await axios.post(process.env.API_URL + '/documents', {
@@ -1856,7 +1979,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked and volunteers have outstanding documents but no missing documents, all volunteers should be returned with empty missing document array and full outstanding documents array and with a status of 200", async () => {
+        test("When volunteers have outstanding documents but no missing documents, all volunteers should be returned with empty missing document array and full outstanding documents array and with a status of 200", async () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
@@ -1906,7 +2029,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked and volunteers have outstanding and missing documents, all volunteers should be returned with valid missing and outstanding document arrays and with a status of 200", async () => {
+        test("When volunteers have outstanding and missing documents, all volunteers should be returned with valid missing and outstanding document arrays and with a status of 200", async () => {
             let numberOfDocuments = 5
             for (let i = 0; i < numberOfDocuments; i++) {
                 let randDocument = randomDocument()
@@ -1963,7 +2086,7 @@ describe("Volunteers", () => {
     })
 
     describe("GET /volunteers/birthdays/:daysThreshold", () => {
-        test("When asked for a list of volunteers with birthdays within the threshold, all should be received with a status of 200", async () => {
+        test("When volunteers have birthdays within the threshold, all should be received with a status of 200", async () => {
             let numberOfVolunteers = 5
             let daysThreshold = Math.floor(Math.random() * 335) + 30
 
@@ -2005,10 +2128,10 @@ describe("Volunteers", () => {
                 expect(response.data[i].birthday).toBe(randomVolunteers[i].birthday)
             }
 
-            expect(response.status).toBe(200)
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of volunteers with birthdays within the threshold and no volunteers have birthdays within the threshold, an empty array should be received with a status of 200", async () => {
+        test("When no volunteers have birthdays within the threshold, an empty array should be received with a status of 200", async () => {
             let numberOfVolunteers = 5
             let daysThreshold = 30
 
@@ -2039,37 +2162,41 @@ describe("Volunteers", () => {
             const response = await axios.get(process.env.API_URL + '/volunteers/birthdays/upcoming/' + daysThreshold)
 
             expect(response.data.length).toBe(0)
-            expect(response.status).toBe(200)
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of volunteers with birthdays and the threshold is invalid, a response of 400 should be received", async () => {
-            let daysThreshold = -1
-
+        test("When the threshold is invalid, a response of 400 should be received", async () => {
+            const daysThreshold = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/birthdays/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("When asked for a list of volunteers with birthdays within the threshold and an error occurs, a response of 500 should be received", async () => {
+        test("An error occurs when retrieving volunteers within threshold a response of 500 should be received", async () => {
             jest.spyOn(Volunteer, 'find').mockImplementation(() => {
                 throw new Error('Database connection error');
             });
 
             const validThreshold = 30
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/birthdays/upcoming/' + validThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+                error = err
             }
-
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
             Volunteer.find.mockRestore();
         })
     })
 
     describe("GET /volunteers/training/upcoming/:daysThreshold", () => {
-        test("When asked for a list of volunteers with overdue training within the threshold (and no excluded roles), all should be received with a status of 200", async () => {
+        test("When within the threshold (and no excluded roles), all should be received with a status of 200", async () => {
             // create training
             let numberOfTraining = 5
             let maxRenewalFrequency = 0
@@ -2132,7 +2259,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked for a list of volunteers with training within the threshold (and no excluded roles) and no volunteers have overdue training, all the missing training should be returned and an empty array for the outstanding training, should be received with a status of 200", async () => {
+        test("When within the threshold (and no excluded roles) and no volunteers have overdue training, all the missing training should be returned and an empty array for the outstanding training, should be received with a status of 200", async () => {
             // create training
             let numberOfTraining = 5
             let maxRenewalFrequency = 0
@@ -2181,7 +2308,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked for a list of volunteers with training within the threshold (and no excluded roles) and all volunteers have valid training should be returned and an empty array for the outstanding training and missing training, should be received with a status of 200", async () => {
+        test("When within the threshold (and no excluded roles) and all volunteers have valid training it should respond with an empty array for the outstanding training and missing training, should be received with a status of 200", async () => {
             // create training
             let numberOfTraining = 5
             let maxRenewalFrequency = 2
@@ -2243,7 +2370,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked for a list of volunteers with outstanding training and their role excludes the training, all volunteers should be returned with empty missing and outstanding training arrays and with a status of 200", async () => {
+        test("When volunteers role excludes the training, all volunteers should be returned with empty missing and outstanding training arrays and with a status of 200", async () => {
             // create role
             await axios.post(process.env.API_URL + '/roles', {
                 name: randomRole().name,
@@ -2319,20 +2446,22 @@ describe("Volunteers", () => {
             }
         })
 
-        test("Invalid threshold", async () => {
-            let daysThreshold = -1
-
+        test("When a invalid threshold is provided", async () => {
+            const daysThreshold = -1
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/training/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
     })
 
     describe("GET /volunteers/:id/training/upcoming/:daysThreshold", () => {
-        test("When asked for a volunteer with overdue training within the threshold (and no excluded roles), all should be received with a status of 200", async () => {
+        test("Existing volunteer within the threshold (and no excluded roles), all should be received with a status of 200", async () => {
             // create training
             let numberOfTraining = 5
             let maxRenewalFrequency = 0
@@ -2578,26 +2707,30 @@ describe("Volunteers", () => {
             }
         })
 
-        test("Volunteer does not exist", async () => {
-            let daysThreshold = 30
-            let volunteerId = faker.database.mongodbObjectId()
-
+        test("When volunteer does not exist", async () => {
+            const daysThreshold = 30
+            const volunteerId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + volunteerId + '/training/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
-        test("Volunteer ID is not a valid object id", async () => {
-            let daysThreshold = 30
-            let volunteerId = "123"
-
+        test("When Volunteer ID is not a valid object id", async () => {
+            const daysThreshold = 30
+            const volunteerId = "123"
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + volunteerId + '/training/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
         test("When there is no training, an empty array should be the response", async () => {
@@ -2625,7 +2758,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("invalid threshold", async () => {
+        test("When a invalid days threshold is provided a status of 400 should be returned", async () => {
             let daysThreshold = -1
             // create volunteer
             let randVolunteer = randomVolunteer()
@@ -2649,15 +2782,14 @@ describe("Volunteers", () => {
                 await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/training/upcoming/' + daysThreshold)
             } catch (err) {
                 error = err
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
             }
-
             expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
     })
 
     describe("GET /volunteers/awards/upcoming/:daysThreshold", () => {
-        test("When asked for a list of volunteers with awards within the threshold, all should be received with a status of 200", async () => {
+        test("Volunteers with awards within the threshold should respond with all volunteers and a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2716,7 +2848,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked for a list of volunteers with awards within the threshold and no volunteers have awards within the threshold, an empty array should be received with a status of 200", async () => {
+        test("No volunteers have awards within the threshold should respond with an empty array and a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2781,7 +2913,7 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("Volunteer has awards but not given, they should be returned as not given", async () => {
+        test("Volunteer has awards none are given should return all as not given with a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2851,7 +2983,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked but there are no volunteers, an empty array should be received with a status of 200", async () => {
+        test("No volunteers should respond with an empty array and a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2877,7 +3009,7 @@ describe("Volunteers", () => {
             expect(response.status).toBe(axios.HttpStatusCode.Ok)
         })
 
-        test("When asked for a list of volunteers with awards and the threshold is invalid, a response of 400 should be received", async () => {
+        test("The threshold is invalid a response of 400 should be received", async () => {
             let daysThreshold = -1
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2891,15 +3023,17 @@ describe("Volunteers", () => {
                     requiredServiceLength: randAward.requiredServiceLength,
                 })
             }
-
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/awards/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
-        test("Volunteer has a break, no awards should be returned", async () => {
+        test("Volunteer has a break greater than the required service lengths should respond with an empty array and status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -2955,7 +3089,7 @@ describe("Volunteers", () => {
     })
 
     describe("GET /volunteers/:id/awards/upcoming/:daysThreshold", () => {
-        test("When asked for a volunteer with awards within the threshold, all should be received with a status of 200", async () => {
+        test("Existing volunteer within the threshold should receive the awards as upcoming with a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -3011,7 +3145,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked for a volunteer with awards within the threshold and no volunteers have awards within the threshold, an empty array should be received with a status of 200", async () => {
+        test("Existing volunteer does not have awards within the threshold, an empty array should be received with a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -3077,7 +3211,7 @@ describe("Volunteers", () => {
             }
         })
 
-        test("Volunteer has awards but not given, they should be returned as not given", async () => {
+        test("Existing volunteer has awards but none are given should be returned all as not given with a status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -3143,18 +3277,20 @@ describe("Volunteers", () => {
             }
         })
 
-        test("When asked but volunteer does not exist a status of 404", async () => {
-            let daysThreshold = 30
-            let volunteerId = faker.database.mongodbObjectId()
-
+        test("Volunteer not existing should return a status of 404", async () => {
+            const daysThreshold = 30
+            const volunteerId = faker.database.mongodbObjectId()
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + volunteerId + '/awards/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
-        test("When asked for a volunteer with awards and the threshold is invalid, a response of 400 should be received", async () => {
+        test("Existing volunteers and an invalid threshold should respond with a status of 400", async () => {
             let daysThreshold = -1
             let numberOfAwards = 5
             let maxServiceLength = 0
@@ -3185,14 +3321,18 @@ describe("Volunteers", () => {
                 training: randVolunteer.training // Empty ATM
             })
 
+            let error = null
             try {
                 await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/awards/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.BadRequest)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.BadRequest)
         })
 
         test("No Awards Exist", async () => {
+            let error = null
             try {
                 let daysThreshold = 30
                 // create volunteer
@@ -3213,11 +3353,13 @@ describe("Volunteers", () => {
 
                 const response = await axios.get(process.env.API_URL + '/volunteers/' + createdVolunteer._id + '/awards/upcoming/' + daysThreshold)
             } catch (err) {
-                expect(err.response.status).toBe(axios.HttpStatusCode.NotFound)
+                error = err
             }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.NotFound)
         })
 
-        test("Volunteer has a break, no awards should be returned", async () => {
+        test("Volunteer has a break greater than the given awards should respond with empty arrays with status of 200", async () => {
             // create training
             let numberOfAwards = 5
             let maxServiceLength = 0

@@ -21,18 +21,18 @@ const randomVolunteer = () => {
 }
 
 const randomDocument = () => {
-    const randomIndex = Math.floor(Math.random() * documents.length)
+    const randomName = "Document" + faker.number.int({min: 1, max: 1000000})
     return {
         id: faker.database.mongodbObjectId(),
-        name: documents[randomIndex]
+        name: randomName
     }
 }
 
 const randomRole = () => {
-    const randomIndex = Math.floor(Math.random() * roles.length);
+    const randomName = "Role" + faker.number.int({min: 1, max: 1000000})
     return {
         id: faker.database.mongodbObjectId(),
-        name: roles[randomIndex]
+        name: randomName
     }
 }
 
@@ -46,10 +46,10 @@ const randomAward = () => {
 }
 
 const randomTraining = () => {
-    const randomIndex = Math.floor(Math.random() * training.length);
+    const randomName = "Training" + faker.number.int({min: 1, max: 1000000})
     return {
         id: faker.database.mongodbObjectId(),
-        name: training[randomIndex],
+        name: randomName,
         renewalFrequency: faker.number.int({min: 1, max: 5}),
         excludedRoles: []
     }

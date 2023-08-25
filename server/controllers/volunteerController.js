@@ -159,6 +159,10 @@ volunteerController.findOutstandingDocuments = async function () {
 
 volunteerController.findUpcomingAwards = async function (daysThreshold) {
     try {
+        if (daysThreshold < 0) {
+            throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
+        }
+
         const volunteers = await Volunteer.find({})
 
         const { data: fetchedAwards } = await axios.get(process.env.API_URL + '/awards')
