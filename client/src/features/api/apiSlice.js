@@ -35,19 +35,19 @@ export const apiSlice = createApi({
             providesTags: ['Volunteer']
         }),
         getUpcomingAwards: builder.query({
-            query: (days) => `volunteers/awards/upcoming/${days}`,
+            query: (days) => `/volunteers/awards/upcoming/${days}`,
             providesTags: ['Volunteer']
         }),
         getUpcomingTraining: builder.query({
-            query: (days) => `volunteers/training/upcoming/${days}`,
+            query: (days) => `/volunteers/training/upcoming/${days}`,
             providesTags: ['Volunteer']
         }),
         getUpcomingAwardsByVolunteer: builder.query({
-            query: (id, days) => `volunteers/${id}/awards/upcoming/${days}`,
+            query: (id, days) => `/volunteers/${id}/awards/upcoming/${days}`,
             providesTags: ['Volunteer']
         }),
         getUpcomingTrainingByVolunteer: builder.query({
-            query: (id, days) => `volunteers/${id}/training/upcoming/${days}`,
+            query: (id, days) => `/volunteers/${id}/training/upcoming/${days}`,
             providesTags: ['Volunteer']
         }),
         updateAllVolunteerTraining: builder.mutation({

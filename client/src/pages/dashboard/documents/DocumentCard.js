@@ -204,7 +204,8 @@ export default function DocumentCard(props) {
                         </TableContainer>
                         : <UpcomingEmpty message="No documents outstanding" />
                         )
-                        :
+                        : outstandingDocumentsError ?
+                        "No Document Added. Please add a document in the Documents page." :
                         <LoadingTableSkeleton />
                     }
                 </Collapse>

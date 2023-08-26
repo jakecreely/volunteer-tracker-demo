@@ -80,7 +80,7 @@ export const updateAward = createAsyncThunk('awards/updateAward', async (award) 
 })
 
 export const deleteAward = createAsyncThunk('awards/deleteAward', async (award) => {
-    const response = await deleteProtected(`/awards/delete/${award.id}`)
+    const response = await deleteProtected(`/awards/${award.id}`)
     return response
 })
 

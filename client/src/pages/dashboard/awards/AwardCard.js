@@ -239,7 +239,8 @@ export default function AwardCard(props) {
                         </TableContainer>
                         : <UpcomingEmpty message="No awards upcoming in the given timeframe" />
                         )
-                        :
+                        : upcomingAwardError ?
+                        "No Awards Added. Please add awards in the Awards page" :
                         <LoadingTableSkeleton />
                     }
                 </Collapse>

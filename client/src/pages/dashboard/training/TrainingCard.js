@@ -175,7 +175,8 @@ export default function TrainingCard(props) {
                         </TableContainer>
                         : <UpcomingEmpty message="No training upcoming in the given timeframe" />
                         )
-                        :
+                        : upcomingTrainingError ?
+                        "No Training Added. Please add training in the Training page." :
                         <LoadingTableSkeleton />
                     }
                 </Collapse>
