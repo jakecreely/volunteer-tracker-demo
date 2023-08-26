@@ -31,6 +31,7 @@ router.get('/outstanding-documents', async (req, res) => {
     }
 })
 
+// 
 // TODO: Add response to client with all updated volunteers
 router.put('/training', async (req, res) => {
     try {
