@@ -6,7 +6,8 @@
   "scripts": {
     "test": "jest --verbose --coverage",
     "start:development": "NODE_ENV=development nodemon main.js",
-    "start:production": "NODE_ENV=production nodemon main.js"
+    "start:production": "NODE_ENV=production nodemon main.js",
+    "start": "nodemon main.js"
   },
   "keywords": [],
   "author": "",
