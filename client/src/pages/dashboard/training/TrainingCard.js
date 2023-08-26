@@ -62,10 +62,10 @@ export default function TrainingCard(props) {
                             training: missingTraining
                         })
                     })
-                    volunteerWithTraining.outstandingTraining.forEach(outstandingTraining => {
+                    volunteerWithTraining.overdueTraining.forEach(overdueTraining => {
                         formattedUpcomingTraining.push({
                             volunteer: volunteerWithTraining.volunteer,
-                            training: outstandingTraining
+                            training: overdueTraining
                         })
                     })
                 }
