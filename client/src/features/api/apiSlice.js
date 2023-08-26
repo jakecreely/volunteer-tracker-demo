@@ -52,7 +52,7 @@ export const apiSlice = createApi({
         }),
         updateAllVolunteerTraining: builder.mutation({
             query: () => ({
-                url: `/volunteers/training/update`,
+                url: `/volunteers/training`,
                 method: 'PUT'
             }),
             invalidatesTags: ['Volunteer']
@@ -66,7 +66,7 @@ export const apiSlice = createApi({
         }),
         addVolunteer: builder.mutation({
             query: (newVolunteer) => ({
-                url: '/volunteers/create',
+                url: '/volunteers',
                 method: 'POST',
                 body: newVolunteer
             }),
@@ -74,7 +74,7 @@ export const apiSlice = createApi({
         }),
         updateVolunteer: builder.mutation({
             query: (updatedVolunteer) => ({
-                url: `/volunteers/update/${updatedVolunteer._id}`,
+                url: `/volunteers/${updatedVolunteer._id}`,
                 method: 'PUT',
                 body: updatedVolunteer
             }),
@@ -82,7 +82,7 @@ export const apiSlice = createApi({
         }),
         deleteVolunteer: builder.mutation({
             query: (id) => ({
-                url: `/volunteers/delete/${id}`,
+                url: `/volunteers/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Volunteer']
@@ -98,7 +98,7 @@ export const apiSlice = createApi({
         }),
         addAward: builder.mutation({
             query: (newAward) => ({
-                url: '/awards/create',
+                url: '/awards',
                 method: 'POST',
                 body: newAward
             }),
@@ -106,7 +106,7 @@ export const apiSlice = createApi({
         }),
         updateAward: builder.mutation({
             query: (updatedAward) => ({
-                url: `/awards/update/${updatedAward._id}`,
+                url: `/awards/${updatedAward._id}`,
                 method: 'PUT',
                 body: updatedAward
             }),
@@ -114,7 +114,7 @@ export const apiSlice = createApi({
         }),
         deleteAward: builder.mutation({
             query: (id) => ({
-                url: `/awards/delete/${id}`,
+                url: `/awards/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Award']
@@ -136,7 +136,7 @@ export const apiSlice = createApi({
         }),
         addTraining: builder.mutation({
             query: (newTraining) => ({
-                url: '/training/create',
+                url: '/training',
                 method: 'POST',
                 body: newTraining
             }),
@@ -144,7 +144,7 @@ export const apiSlice = createApi({
         }),
         updateTraining: builder.mutation({
             query: (updatedTraining) => ({
-                url: `/training/update/${updatedTraining._id}`,
+                url: `/training/${updatedTraining._id}`,
                 method: 'PUT',
                 body: updatedTraining
             }),
@@ -152,7 +152,7 @@ export const apiSlice = createApi({
         }),
         deleteTraining: builder.mutation({
             query: (id) => ({
-                url: `/training/delete/${id}`,
+                url: `/training/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Training']
@@ -168,7 +168,7 @@ export const apiSlice = createApi({
         }),
         addRole: builder.mutation({
             query: (newRole) => ({
-                url: '/roles/create',
+                url: '/roles',
                 method: 'POST',
                 body: newRole
             }),
@@ -176,7 +176,7 @@ export const apiSlice = createApi({
         }),
         updateRole: builder.mutation({
             query: (updatedRole) => ({
-                url: `/roles/update/${updatedRole._id}`,
+                url: `/roles/${updatedRole._id}`,
                 method: 'PUT',
                 body: updatedRole
             }),
@@ -184,7 +184,7 @@ export const apiSlice = createApi({
         }),
         deleteRole: builder.mutation({
             query: (id) => ({
-                url: `/roles/delete/${id}`,
+                url: `/roles/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Role']
@@ -200,7 +200,7 @@ export const apiSlice = createApi({
         }),
         addDocument: builder.mutation({
             query: (newDocument) => ({
-                url: '/documents/create',
+                url: '/documents',
                 method: 'POST',
                 body: newDocument
             }),
@@ -208,7 +208,7 @@ export const apiSlice = createApi({
         }),
         updateDocument: builder.mutation({
             query: (updatedDocument) => ({
-                url: `/documents/update/${updatedDocument._id}`,
+                url: `/documents/${updatedDocument._id}`,
                 method: 'PUT',
                 body: updatedDocument
             }),
@@ -216,7 +216,7 @@ export const apiSlice = createApi({
         }),
         deleteDocument: builder.mutation({
             query: (id) => ({
-                url: `/documents/delete/${id}`,
+                url: `/documents/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Document']

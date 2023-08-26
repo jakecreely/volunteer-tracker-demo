@@ -70,17 +70,17 @@ export const getTraining = createAsyncThunk('training/getTraining', async () => 
 })
 
 export const addTraining = createAsyncThunk('training/addTraining', async (training) => {
-    const response = await postProtected('/training/create', training)
+    const response = await postProtected('/training', training)
     return response
 })
 
 export const updateTraining = createAsyncThunk('training/updateTraining', async (training) => {
-    const response = await putProtected(`/training/update/${training.id}`, training)
+    const response = await putProtected(`/training/${training.id}`, training)
     return response
 })
 
 export const deleteTraining = createAsyncThunk('training/deleteTraining', async (training) => {
-    const response = await deleteProtected(`/training/delete/${training.id}`)
+    const response = await deleteProtected(`/training/${training.id}`)
     return response
 })
 

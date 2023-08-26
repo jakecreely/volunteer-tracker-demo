@@ -72,17 +72,17 @@ export const getRoles = createAsyncThunk('roles/getRoles', async () => {
 })
 
 export const addRoles = createAsyncThunk('roles/addRole', async (role) => {
-    const response = await postProtected('/roles/create', role)
+    const response = await postProtected('/roles', role)
     return response
 })
 
 export const updateRole = createAsyncThunk('roles/updateRole', async (role) => {
-    const response = await putProtected(`/roles/update/${role.id}`, role)
+    const response = await putProtected(`/roles/${role.id}`, role)
     return response
 })
 
 export const deleteRole = createAsyncThunk('roles/deleteRole', async (role) => {
-    const response = await deleteProtected(`/roles/delete/${role.id}`)
+    const response = await deleteProtected(`/roles/${role.id}`)
     return response
 })
 

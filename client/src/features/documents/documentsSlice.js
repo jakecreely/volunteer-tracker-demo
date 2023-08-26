@@ -70,17 +70,17 @@ export const getDocuments = createAsyncThunk('documents/getDocuments', async () 
 })
 
 export const addDocument = createAsyncThunk('documents/addDocument', async (document) => {
-    const response = await postProtected('/documents/create', document)
+    const response = await postProtected('/documents', document)
     return response
 })
 
 export const updateDocument = createAsyncThunk('documents/updateDocument', async (document) => {
-    const response = await putProtected(`/document/update/${document.id}`, document)
+    const response = await putProtected(`/document/${document.id}`, document)
     return response
 })
 
 export const deleteDocument = createAsyncThunk('documents/deleteDocument', async (document) => {
-    const response = await deleteProtected(`/documents/delete/${document.id}`)
+    const response = await deleteProtected(`/documents/${document.id}`)
     return response
 })
 

@@ -641,7 +641,7 @@ describe("Roles", () => {
 
             let error = null
             try {
-                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, {name: ""})
+                await axios.put(process.env.API_URL + '/roles/' + savedRole.data._id, { name: "" })
             } catch (err) {
                 error = err
             }
@@ -1764,7 +1764,7 @@ describe("Volunteers", () => {
 
             let error = null
             try {
-                await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer._id,  {
+                await axios.put(process.env.API_URL + '/volunteers/' + savedVolunteer._id, {
                     name: "",
                     startDate: "",
                     birthday: "",
@@ -3417,15 +3417,271 @@ describe("Volunteers", () => {
         })
     })
 
-    describe("PUT /volunteers/training/update", () => {
+    describe("PUT /volunteers/training", () => {
         // write test.todos for all the different scenarios
-        test.todo("When asked to update all volunteer's training, the volunteers training should be updated and a status of 200 should be received")
+        test("If volunteer has no training then no training should be added to the volunteer and a status of 200 should be received", async () => {
+            let numberOfTraining = 5
+            let maxRenewalFrequency = 0
+            for (let i = 0; i < numberOfTraining; i++) {
+                let randTraining = randomTraining()
+                if (randTraining.renewalFrequency > maxRenewalFrequency) {
+                    maxRenewalFrequency = randTraining.renewalFrequency
+                }
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randTraining.name,
+                    renewalFrequency: randTraining.renewalFrequency,
+                })
+            }
 
-        test.todo("When asked to update all volunteer's training and there are no volunteers, a status of 200 should be received")
+            const {
+                data: fetchedTraining
+            } = await axios.get(process.env.API_URL + '/training')
 
-        test.todo("When asked to update all volunteer's training and an error occurs, a status of 500 should be received")
+            // create volunteers with no training
+            let numberOfVolunteers = 5
+            let randomVolunteers = new Array(numberOfVolunteers)
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                let randVolunteer = randomVolunteer()
+                randomVolunteers[i] = randVolunteer
 
-        test.todo("When asked to update all volunteer's training and there are no training")
+                await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randomVolunteers[i].name,
+                    startDate: randomVolunteers[i].startDate,
+                    birthday: randomVolunteers[i].birthday, //Currently toISOString() format
+                    breakDuration: randomVolunteers[i].breakDuration,
+                    isArchived: randomVolunteers[i].isArchived,
+                    roles: randomVolunteers[i].roles, // Empty ATM
+                    documents: randomVolunteers[i].documents, // Empty ATM
+                    awards: randomVolunteers[i].awards, // Empty ATM
+                    training: [] // Empty ATM
+                })
+            }
+
+            //TODO: Add Sorting to All Routes
+            const response = await axios.put(process.env.API_URL + '/volunteers/training')
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                expect(response.data[i].name).toBe(randomVolunteers[i].name)
+                expect(response.data[i].training.length).toBe(0)
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+            }
+        })
+
+        test("If volunteer has training which is out of date, the training should be updated and a status of 200 should be received", async () => {
+            let numberOfTraining = 5
+            let maxRenewalFrequency = 0
+            for (let i = 0; i < numberOfTraining; i++) {
+                let randTraining = randomTraining()
+                if (randTraining.renewalFrequency > maxRenewalFrequency) {
+                    maxRenewalFrequency = randTraining.renewalFrequency
+                }
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randTraining.name,
+                    renewalFrequency: randTraining.renewalFrequency,
+                })
+            }
+
+            const {
+                data: fetchedTraining
+            } = await axios.get(process.env.API_URL + '/training')
+
+            // create volunteers with training - all over threshold
+            let numberOfVolunteers = 5
+            let randomVolunteers = new Array(numberOfVolunteers)
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                let randVolunteer = randomVolunteer()
+
+                // Add the training to the volunteer
+                let today = moment()
+                today.subtract(maxRenewalFrequency, 'years')
+                // random between 0 and 100
+                let randomDays = Math.floor(Math.random() * 100)
+                today.subtract(randomDays, 'days')
+                randVolunteer.startDate = today.toISOString()
+                randVolunteer.breakDuration = 0
+
+                // add all training to volunteer
+                for (let i = 0; i < fetchedTraining.length; i++) {
+                    let updatedTrainingDate = moment()
+                    // pick a random number between the renewal frequency and 0
+                    let randomDays = Math.floor(Math.random() * (fetchedTraining[i].renewalFrequency * 28))
+                    updatedTrainingDate.subtract(maxRenewalFrequency, 'years')
+                    updatedTrainingDate.subtract(randomDays, 'days')
+                    randVolunteer.training.push({
+                        trainingId: fetchedTraining[i]._id,
+                        name: fetchedTraining[i].name,
+                        completedOn: updatedTrainingDate.toISOString(),
+                        needsRetraining: false,
+                    })
+                }
+
+                randomVolunteers[i] = randVolunteer
+
+                await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randomVolunteers[i].name,
+                    startDate: randomVolunteers[i].startDate,
+                    birthday: randomVolunteers[i].birthday, //Currently toISOString() format
+                    breakDuration: randomVolunteers[i].breakDuration,
+                    isArchived: randomVolunteers[i].isArchived,
+                    roles: randomVolunteers[i].roles, // Empty ATM
+                    documents: randomVolunteers[i].documents, // Empty ATM
+                    awards: randomVolunteers[i].awards, // Empty ATM
+                    training: randomVolunteers[i].training // Empty ATM
+                })
+
+                // TODO volunteers not sorted by date
+            }
+
+            const response = await axios.put(process.env.API_URL + '/volunteers/training')
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                expect(response.data[i].name).toBe(randomVolunteers[i].name)
+                expect(response.data[i].training.length).toBe(numberOfTraining)
+                for (let j = 0; j < randomVolunteers[i].training.length; j++) {
+                    console.log(response.data[i].training[j])
+                    expect(response.data[i].training[j].name).toBe(randomVolunteers[i].training[j].name)
+                    expect(response.data[i].training[j].needsRetraining).toBe(true)
+                }
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+            }
+        })
+
+        test("If volunteer has training which is not out of date, the training should not be updated and a status of 200 should be received", async () => {
+            let numberOfTraining = 5
+            let maxRenewalFrequency = 0
+            for (let i = 0; i < numberOfTraining; i++) {
+                let randTraining = randomTraining()
+                if (randTraining.renewalFrequency > maxRenewalFrequency) {
+                    maxRenewalFrequency = randTraining.renewalFrequency
+                }
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randTraining.name,
+                    renewalFrequency: randTraining.renewalFrequency,
+                })
+            }
+
+            const {
+                data: fetchedTraining
+            } = await axios.get(process.env.API_URL + '/training')
+
+            // create volunteers with training - all over threshold
+            let numberOfVolunteers = 5
+            let randomVolunteers = new Array(numberOfVolunteers)
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                let randVolunteer = randomVolunteer()
+
+                // Add the training to the volunteer
+                let today = moment()
+                today.subtract(maxRenewalFrequency, 'years')
+                // random between 0 and 100
+                let randomDays = Math.floor(Math.random() * 100)
+                today.subtract(randomDays, 'days')
+                randVolunteer.startDate = today.toISOString()
+                randVolunteer.breakDuration = 0
+
+                // add all training to volunteer
+                for (let i = 0; i < fetchedTraining.length; i++) {
+                    randVolunteer.training.push({
+                        trainingId: fetchedTraining[i]._id,
+                        name: fetchedTraining[i].name,
+                        completedOn: moment().toISOString(), // Current Date
+                        needsRetraining: false,
+                    })
+                }
+
+                randomVolunteers[i] = randVolunteer
+
+                await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randomVolunteers[i].name,
+                    startDate: randomVolunteers[i].startDate,
+                    birthday: randomVolunteers[i].birthday, //Currently toISOString() format
+                    breakDuration: randomVolunteers[i].breakDuration,
+                    isArchived: randomVolunteers[i].isArchived,
+                    roles: randomVolunteers[i].roles, // Empty ATM
+                    documents: randomVolunteers[i].documents, // Empty ATM
+                    awards: randomVolunteers[i].awards, // Empty ATM
+                    training: randomVolunteers[i].training // Empty ATM
+                })
+
+                // TODO volunteers not sorted by date
+            }
+
+            const response = await axios.put(process.env.API_URL + '/volunteers/training')
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                expect(response.data[i].name).toBe(randomVolunteers[i].name)
+                expect(response.data[i].training.length).toBe(numberOfTraining)
+                for (let j = 0; j < randomVolunteers[i].training.length; j++) {
+                    expect(response.data[i].training[j].name).toBe(randomVolunteers[i].training[j].name)
+                    expect(response.data[i].training[j].needsRetraining).toBe(false)
+                }
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+            }
+        })
+
+        test("If there is training but no volunteers, an empty array should be recieved with a status of 200", async () => {
+            // create training
+            let numberOfTraining = 5
+            let maxRenewalFrequency = 0
+            for (let i = 0; i < numberOfTraining; i++) {
+                let randTraining = randomTraining()
+                if (randTraining.renewalFrequency > maxRenewalFrequency) {
+                    maxRenewalFrequency = randTraining.renewalFrequency
+                }
+                await axios.post(process.env.API_URL + '/training', {
+                    name: randTraining.name,
+                    renewalFrequency: randTraining.renewalFrequency,
+                })
+            }
+
+            // update volunteer training
+            const response = await axios.put(process.env.API_URL + '/volunteers/training')
+            expect(response.data).toStrictEqual([])
+            expect(response.status).toBe(axios.HttpStatusCode.Ok)
+        })
+
+        test("If there are volunteers but no training, an empty array should be recieved with a status of 200", async () => {
+            // create volunteers with no training
+            let numberOfVolunteers = 5
+            let randomVolunteers = new Array(numberOfVolunteers)
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                let randVolunteer = randomVolunteer()
+                randomVolunteers[i] = randVolunteer
+
+                await axios.post(process.env.API_URL + '/volunteers', {
+                    name: randomVolunteers[i].name,
+                    startDate: randomVolunteers[i].startDate,
+                    birthday: randomVolunteers[i].birthday, //Currently toISOString() format
+                    breakDuration: randomVolunteers[i].breakDuration,
+                    isArchived: randomVolunteers[i].isArchived,
+                    roles: randomVolunteers[i].roles, // Empty ATM
+                    documents: randomVolunteers[i].documents, // Empty ATM
+                    awards: randomVolunteers[i].awards, // Empty ATM
+                    training: [] // Empty ATM
+                })
+            }
+
+            //TODO: Add Sorting to All Routes
+            const response = await axios.put(process.env.API_URL + '/volunteers/training')
+            for (let i = 0; i < numberOfVolunteers; i++) {
+                expect(response.data[i].name).toBe(randomVolunteers[i].name)
+                expect(response.data[i].training.length).toBe(0)
+                expect(response.status).toBe(axios.HttpStatusCode.Ok)
+            }
+        })
+
+        test("An error occurs when updating training should result in a status of 500", async () => {
+            jest.spyOn(Training, 'find').mockImplementation(() => {
+                throw new Error('Database connection error');
+            });
+
+            let error = null
+            try {
+                await axios.put(process.env.API_URL + '/volunteers/training')
+            } catch (err) {
+                error = err
+            }
+            expect(error).not.toBeNull()
+            expect(error.response.status).toBe(axios.HttpStatusCode.InternalServerError)
+            Training.find.mockRestore();
+        })
     })
 
     describe("PUT /volunteers/awards/update", () => {

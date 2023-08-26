@@ -31,6 +31,17 @@ router.get('/outstanding-documents', async (req, res) => {
     }
 })
 
+// TODO: Add response to client with all updated volunteers
+router.put('/training', async (req, res) => {
+    try {
+        let training = await Training.find()
+        let updatedVolunteers = await Volunteer.updateOverdueTraining(training)
+        res.status(HttpStatusCode.Ok).send(updatedVolunteers)
+    } catch (err) {
+        res.status(HttpStatusCode.InternalServerError).send(err.message)
+    }
+})
+
 //TODO: Add validation for the request body
 router.post('/', async (req, res) => {
     try {
@@ -135,7 +146,7 @@ router.get('/training/upcoming/:daysThreshold?', async (req, res) => {
 
 // Add the cutoff dates to the volunteer object
 router.get('/awards/upcoming/:daysThreshold?', async (req, res) => {
-    try {
+    try {  
         let daysThreshold = req.params.daysThreshold === undefined ? 0 : req.params.daysThreshold
         const result = await volunteerController.findUpcomingAwards(daysThreshold)
         res.status(HttpStatusCode.Ok).send(result)
@@ -145,17 +156,6 @@ router.get('/awards/upcoming/:daysThreshold?', async (req, res) => {
         } else {
             res.status(HttpStatusCode.InternalServerError).send(err.message)
         }
-    }
-})
-
-// TODO: Add response to client with all updated volunteers
-router.put('/training/update', async (req, res) => {
-    try {
-        let training = await Training.find()
-        let updatedVolunteers = await Volunteer.updateOverdueTraining(training)
-        res.status(HttpStatusCode.Ok).send(updatedVolunteers)
-    } catch (err) {
-        res.status(HttpStatusCode.InternalServerError).send(err.message)
     }
 })
 

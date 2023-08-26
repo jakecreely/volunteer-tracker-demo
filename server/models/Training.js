@@ -19,7 +19,7 @@ const trainingSchema = new mongoose.Schema({
   },
   renewalFrequency: {
     type: Number,
-    min: [0, 'Training renewal frequency must be a positive integer'],
+    min: [0, 'Training renewal frequency (years) must be a positive integer'],
     required: [true, 'Training renewal frequency is required']
   },
   excludedRoles: {

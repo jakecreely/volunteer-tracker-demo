@@ -70,12 +70,12 @@ export const getAwards = createAsyncThunk('awards/getAwards', async () => {
 })
 
 export const addAward = createAsyncThunk('awards/addAward', async (award) => {
-    const response = await postProtected('/awards/create', award)
+    const response = await postProtected('/awards', award)
     return response
 })
 
 export const updateAward = createAsyncThunk('awards/updateAward', async (award) => {
-    const response = await putProtected(`/awards/update/${award.id}`, award)
+    const response = await putProtected(`/awards/${award.id}`, award)
     return response
 })
 

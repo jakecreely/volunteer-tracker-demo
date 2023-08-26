@@ -72,19 +72,19 @@ export const getVolunteers = createAsyncThunk('volunteers/getVolunteers', async 
 
 export const addVolunteer = createAsyncThunk('volunteers/addVolunteer', async (volunteer) => {
     console.log('adding volunteer')
-    const response = await postProtected('/volunteers/create', volunteer)
+    const response = await postProtected('/volunteers', volunteer)
     return response
 })
 
 export const updateVolunteer = createAsyncThunk('volunteers/updateVolunteer', async (volunteer) => {
     console.log('updating volunteer')
-    const response = await putProtected(`/volunteers/update/${volunteer.id}`, volunteer)
+    const response = await putProtected(`/volunteers/${volunteer.id}`, volunteer)
     return response
 })
 
 export const deleteVolunteer = createAsyncThunk('volunteers/deleteVolunteer', async (volunteer) => {
     console.log('deleting volunteer')
-    const response = await deleteProtected(`/volunteers/delete/${volunteer.id}`)
+    const response = await deleteProtected(`/volunteers/${volunteer.id}`)
     return response
 })
 
