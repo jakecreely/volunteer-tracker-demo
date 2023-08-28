@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const getProtected = async (url) => {
-    const request = await axios.get(process.env.REACT_APP_BASE_URL + url).then(res => {
+    const request = await axios.get(process.env.REACT_APP_API_BASE_URL + url).then(res => {
         return (res.data)
     }).catch(err => {
         console.log(err)
@@ -11,7 +11,7 @@ export const getProtected = async (url) => {
 }
 
 export const postProtected = async (url, data) => {
-    const request = await axios.post(process.env.REACT_APP_BASE_URL + url, data).then(res => {
+    const request = await axios.post(process.env.REACT_APP_API_BASE_URL + url, data).then(res => {
         return (res.data)
     }).catch(err => {
         console.log(err)
@@ -21,7 +21,7 @@ export const postProtected = async (url, data) => {
 }
 
 export const putProtected = async (url, data) => {
-    const request = await axios.put(process.env.REACT_APP_BASE_URL + url, data).then(res => {
+    const request = await axios.put(process.env.REACT_APP_API_BASE_URL + url, data).then(res => {
         return (res.data)
     }).catch(err => {
         console.log(err)
@@ -31,7 +31,7 @@ export const putProtected = async (url, data) => {
 }
 
 export const deleteProtected = async (url) => {
-    const request = await axios.delete(process.env.REACT_APP_BASE_URL + url).then(res => {
+    const request = await axios.delete(process.env.REACT_APP_API_BASE_URL + url).then(res => {
         return (res.data)
     }).catch(err => {
         console.log(err)
