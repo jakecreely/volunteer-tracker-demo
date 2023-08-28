@@ -32,9 +32,9 @@ const setupServer = () => {
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    app.set('trust proxy', 1)
-    app.get('/ip', (request, response) => response.send(request.ip))
+    //app.set('trust proxy', 1)
 
+    console.log("process.env.API_URL:", process.env.API_URL)
     axios.defaults.baseURL = process.env.API_URL;
 
     if (process.env.NODE_ENV === 'production') {
