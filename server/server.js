@@ -18,7 +18,8 @@ const volunteerRoutes = require('./routes/volunteerRoutes')
 const trainingRoutes = require('./routes/trainingRoutes')
 const rewardRoutes = require('./routes/awardRoutes')
 const roleRoutes = require('./routes/roleRoutes')
-const documentRoutes = require('./routes/documentRoutes')
+const documentRoutes = require('./routes/documentRoutes');
+const { default: axios } = require("axios");
 const env = process.env.NODE_ENV || 'development';
 
 dotenv.config({ path: `./.env.${env}` });
@@ -31,6 +32,10 @@ const setupServer = () => {
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    app.set('trust proxy', 1)
+    app.get('/ip', (request, response) => response.send(request.ip))
+
+    axios.defaults.baseURL = process.env.API_URL;
 
     if (process.env.NODE_ENV === 'production') {
       const limiter = rateLimit({
