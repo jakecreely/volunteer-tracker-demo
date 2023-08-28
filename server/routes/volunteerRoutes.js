@@ -39,7 +39,6 @@ router.put('/training', async (req, res) => {
         let updatedVolunteers = await Volunteer.updateOverdueTraining(training)
         res.status(HttpStatusCode.Ok).send(updatedVolunteers)
     } catch (err) {
-        console.log(err)
         res.status(HttpStatusCode.InternalServerError).send(err.message)
     }
 })

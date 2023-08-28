@@ -21,7 +21,7 @@ const roleRoutes = require('./routes/roleRoutes')
 const documentRoutes = require('./routes/documentRoutes');
 const { default: axios } = require("axios");
 const env = process.env.NODE_ENV || 'development';
-if (env !== 'production') {
+if (env !== 'production') { // This was being loaded twice in hosting, the second time would be undefined
   dotenv.config({ path: `./.env.${env}` });
 }
 let connection;
@@ -33,9 +33,7 @@ const setupServer = () => {
     app.use(cors());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
-    //app.set('trust proxy', 1)
 
-    console.log("process.env.API_URL:", process.env.API_URL)
     axios.defaults.baseURL = process.env.API_URL;
 
     if (process.env.NODE_ENV === 'production') {
