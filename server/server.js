@@ -34,8 +34,6 @@ const setupServer = () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    axios.defaults.baseURL = process.env.API_URL;
-
     if (process.env.NODE_ENV === 'production') {
       const limiter = rateLimit({
         windowMs: 15 * 60 * 1000,

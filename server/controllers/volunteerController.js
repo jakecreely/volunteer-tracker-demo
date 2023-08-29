@@ -2,6 +2,9 @@ const axios = require('axios');
 const moment = require('moment');
 const Volunteer = require('../models/Volunteer');
 const createHttpError = require('http-errors');
+const Training = require('../models/Training');
+const Document = require('../models/Document');
+const Award = require('../models/Award');
 
 const volunteerController = {};
 
@@ -20,7 +23,7 @@ volunteerController.findUpcomingTraining = async function (daysThreshold) {
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training')
+        const fetchedTraining = await Training.find({}).exec()
 
         if (fetchedTraining.length === 0) {
             throw createHttpError(404, "No Training Found For Finding Upcoming Training")
@@ -54,7 +57,7 @@ volunteerController.findUpcomingTrainingForVolunteer = async function (volunteer
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const { data: fetchedTraining } = await axios.get(process.env.API_URL + '/training');
+        const fetchedTraining = await Training.find({}).exec()
 
         if (fetchedTraining.length === 0) {
             throw createHttpError(404, "No Training Found For Finding Upcoming Training");
@@ -123,7 +126,7 @@ volunteerController.findUpcomingBirthdays = async function (daysThreshold) {
 
 volunteerController.findOutstandingDocuments = async function () {
     try {
-        const { data: fetchedDocuments } = await axios.get(process.env.API_URL + '/documents')
+        const fetchedDocuments = await Document.find({}).exec()
 
         if (fetchedDocuments.length === 0) {
             throw createHttpError(404, "No Documents Found For Finding Outstanding Documents")
@@ -165,7 +168,7 @@ volunteerController.findUpcomingAwards = async function (daysThreshold) {
 
         const volunteers = await Volunteer.find({})
 
-        const { data: fetchedAwards } = await axios.get(process.env.API_URL + '/awards')
+        const fetchedAwards = await Award.find({}).exec()
 
         if (fetchedAwards.length === 0) {
             throw createHttpError(404, "No Awards Found For Finding Upcoming Awards")
@@ -199,7 +202,8 @@ volunteerController.findUpcomingAwardsForVolunteer = async function (volunteerId
             throw createHttpError(400, "daysThreshold must be greater than or equal to 0")
         }
 
-        const { data: fetchedAwards } = await axios.get(process.env.API_URL + '/awards');
+        //TODO: Probabably should not be calling the API here as this is a called by the API
+        const fetchedAwards = await Award.find({}).exec()
 
         if (fetchedAwards.length === 0) {
             throw createHttpError(404, "No Awards Found For Finding Upcoming Awards");
