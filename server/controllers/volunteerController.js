@@ -95,7 +95,7 @@ volunteerController.findUpcomingBirthdays = async function (daysThreshold) {
         const today = moment()
         const upcoming = moment().add(daysThreshold, 'days')
 
-        let volunteers = await Volunteer.find({}).select('_id name birthday').sort({birthday: 1}).exec()
+        let volunteers = await Volunteer.find({}).select('_id name birthday').sort({ birthday: 1 }).exec()
 
         let upcomingBirthdays = volunteers.filter(volunteer => {
             const birthday = moment(volunteer.birthday).set('year', today.year())
@@ -229,6 +229,22 @@ volunteerController.findUpcomingAwardsForVolunteer = async function (volunteerId
         };
     } catch (err) {
         throw err;
+    }
+}
+
+volunteerController.updateOverdueTraining = async function () {
+    try {
+        const fetchedTraining = await Training.find()
+        const volunteers = await Volunteer.find({}).select('_id name training').exec()
+        const results = await Promise.all(volunteers.map(async (volunteer) => {
+            let updatedTraining = await volunteer.updateOverdueTraining(fetchedTraining)
+            volunteer.training = updatedTraining
+            let updatedVolunteer = await volunteer.save()
+            return updatedVolunteer
+        }))
+        return results
+    } catch (err) {
+        throw err
     }
 }
 

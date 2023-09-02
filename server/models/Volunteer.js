@@ -171,8 +171,8 @@ volunteerSchema.statics.updateOverdueTraining = async function (training) {
   return await Promise.all(volunteers.map(async (volunteer) => {
     let updatedTraining = await volunteer.updateOverdueTraining(training)
     volunteer.training = updatedTraining
-    // let updatedVolunteer = await volunteer.save()
-    return volunteer
+    let updatedVolunteer = await volunteer.save()
+    return updatedVolunteer
   }))
 }
 

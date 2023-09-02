@@ -35,8 +35,7 @@ router.get('/outstanding-documents', async (req, res) => {
 // TODO: Add response to client with all updated volunteers
 router.put('/training', async (req, res) => {
     try {
-        let training = await Training.find()
-        let updatedVolunteers = await Volunteer.updateOverdueTraining(training)
+        const updatedVolunteers = await volunteerController.updateOverdueTraining()
         res.status(HttpStatusCode.Ok).send(updatedVolunteers)
     } catch (err) {
         res.status(HttpStatusCode.InternalServerError).send(err.message)
