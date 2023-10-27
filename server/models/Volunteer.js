@@ -112,6 +112,19 @@ const volunteerSchema = new mongoose.Schema({
   }
 });
 
+volunteerSchema.pre('save', async function (next) {
+  try {
+    // ignore case when checking for existing volunteer
+    const existingVolunteer = await this.model('Volunteer').findOne({ name: { $regex: new RegExp(`^${this.name}$`, 'i') } });
+    if (existingVolunteer) {
+      throw new Error('A volunteer with the same name already exists.');
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 //TODO: look for a better way to do save isGiven
 // Update the isGiven of each volunteer award based on the givenDate
 volunteerSchema.pre('findOneAndUpdate', async function (next) {
@@ -120,6 +133,13 @@ volunteerSchema.pre('findOneAndUpdate', async function (next) {
 
     if (docToUpdate === null) {
       return next(new mongoose.Error.DocumentNotFoundError('No document found with that ID'));
+    }
+
+    if (this._update.name !== docToUpdate.name) {
+      const existingVolunteer = await this.model.findOne({ name: { $regex: new RegExp(`^${this._update.name}$`, 'i') } })
+      if (existingVolunteer) {
+        throw new Error('A volunteer with the same name already exists.');
+      }
     }
 
     // Apply the update to a temporary document to avoid modifying the original document
@@ -135,7 +155,7 @@ volunteerSchema.pre('findOneAndUpdate', async function (next) {
       // Loop through the awards in the volunteer update
       this.getUpdate().awards.forEach(award => {
         // If the givenDate is set to a date, isGiven is set to true
-        if (award.givenDate !== null) {
+        if (moment(award.givenDate).isValid()) {
           award.isGiven = true
         } else { // Set isGiven to false in case it was already true but the givenDate is set to null
           award.isGiven = false
@@ -270,6 +290,7 @@ volunteerSchema.methods.findUpcomingAwards = async function (awards, daysThresho
         awardId: award._id,
         name: award.name,
         achievedDate: calculateAchievedDate(this.startDate, this.breakDuration, award.requiredServiceLength),
+        givenDate: null
       })
     }
   });

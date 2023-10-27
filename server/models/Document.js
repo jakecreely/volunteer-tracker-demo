@@ -8,6 +8,19 @@ const documentSchema = new mongoose.Schema({
   }
 });
 
+documentSchema.pre('save', async function (next) {
+  try {
+    // ignore case when checking for existing volunteer
+    const existingDocument = await this.model('Document').findOne({ name: { $regex: new RegExp(`^${this.name}$`, 'i') } });
+    if (existingDocument) {
+      throw new Error('A document with the same name already exists.');
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 documentSchema.pre('findOneAndUpdate', async function (next) {
   try {
     const docToUpdate = await this.model.findOne(this.getQuery());
@@ -18,6 +31,13 @@ documentSchema.pre('findOneAndUpdate', async function (next) {
 
     if (this.getUpdate() === undefined) {
       return next(new mongoose.Error.ValidationError('No update provided'));
+    }
+
+    if (this._update.name !== docToUpdate.name) {
+      const existingDocument = await this.model.findOne({ name: { $regex: new RegExp(`^${this._update.name}$`, 'i') } })
+      if (existingDocument) {
+        throw new Error('A document with the same name already exists.');
+      }
     }
 
     // Apply the update to a temporary document to avoid modifying the original document

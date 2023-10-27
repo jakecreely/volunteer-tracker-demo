@@ -9,6 +9,18 @@ const roleSchema = new mongoose.Schema({
   }
 });
 
+roleSchema.pre('save', async function (next) {
+  try {
+    const existingRole = await this.model('Role').findOne({ name: { $regex: new RegExp(`^${this.name}$`, 'i') } });
+    if (existingRole) {
+      throw new Error('A role with the same name already exists.');
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Passed fields that are not part of the schema will be ignored
 // If nothing is passed, the role is not updated
 // Should only fail if the name field is invalid - e.g. empty string
@@ -18,6 +30,13 @@ roleSchema.pre('findOneAndUpdate', async function (next) {
 
     if (docToUpdate === null) {
       throw new mongoose.Error.DocumentNotFoundError('No document found with that ID');
+    }
+
+    if (this._update.name !== docToUpdate.name) {
+      const existingRole = await this.model.findOne({ name: { $regex: new RegExp(`^${this._update.name}$`, 'i') } })
+      if (existingRole) {
+        throw new Error('A role with the same name already exists.');
+      }
     }
 
     // Apply the update to a temporary document to avoid modifying the original document

@@ -1,12 +1,22 @@
-import { useState } from 'react'
-import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from './pages/dashboard/Dashboard'
-import { NotFoundPage } from './pages/NotFoundPage';
+import { useEffect, useState } from 'react'
+import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
+import Dashboard from './features/dashboard/components/Dashboard'
+import { NotFoundPage } from './components/NotFoundPage';
+import { Card, Grid, LinearProgress } from '@mui/material';
 
 export function Application() {
 
   const [birthdayLength, setBirthdayLength] = useState(31)
-  const [filterTime, setFilterTime] = useState(30)
+  const defaultFilterTime = 30
+  const [filterTime, setFilterTime] = useState(defaultFilterTime)
+
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('daysAhead')) {
+      setFilterTime(searchParams.get('daysAhead'))
+    }
+  }, [searchParams])
 
   // This is the function that is called when the user changes the number of days to show in the birthday list
   const handleBirthdaySubmit = (e) => {
@@ -33,10 +43,10 @@ export function Application() {
               resetFilter={(e) => resetFilter(e)}
             />}
         />
-        <Route 
-          path="*" 
+        <Route
+          path="*"
           element={
-            <NotFoundPage />} 
+            <NotFoundPage />}
         />
       </Routes>
     )

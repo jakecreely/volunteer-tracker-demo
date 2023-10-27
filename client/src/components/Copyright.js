@@ -8,16 +8,14 @@ export function Copyright(props) {
       <Grid item>
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
           {"For demo purposes only."}
-        </Typography>
-      </Grid>
-      <Grid item>
-        <Typography variant="body2" color="text.secondary" align="center" {...props}>
+          <Link color="inherit" href='https://linkedin.com/in/jake-creely/'>
           {"Feel free to contact me for more information."}
+          </Link>
         </Typography>
       </Grid>
       <Grid item>
         <Typography variant="body2" color="text.secondary" align="center" {...props}>
-          {"Developed by" + " "}
+          {"Developed by "}
           <Link color="inherit" href="https://github.com/jakecreely">
             Jake Creely
           </Link>

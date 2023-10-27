@@ -8,6 +8,10 @@ const Award = require('../models/Award')
 const Document = require('../models/Document');
 const volunteerController = require('../controllers/volunteerController');
 const { HttpStatusCode } = require('axios');
+const { parse } = require('csv-parse/sync');
+const multer = require('multer')
+const upload = multer({ dest: 'uploads/' })
+const fs = require('fs');
 
 router.get('/', async (req, res) => {
     try {
@@ -22,6 +26,96 @@ router.get('/outstanding-documents', async (req, res) => {
     try {
         let volunteersWithDocuments = await volunteerController.findOutstandingDocuments()
         res.status(HttpStatusCode.Ok).send(volunteersWithDocuments)
+    } catch (err) {
+        if (err.status && err.message) {
+            res.status(err.status).send(err.message)
+        } else {
+            res.status(HttpStatusCode.InternalServerError).send(err.message)
+        }
+    }
+})
+
+router.post('/import', upload.single('file'), async (req, res) => {
+    try {
+        // Initialize the parser
+        const records = parse(fs.readFileSync(req.file.path), {
+            skip_empty_lines: true
+        });
+
+        // Check header is in the correct format
+        const actualHeaders = records[0]
+        const expectedHeaders = [
+            'Volunteers Name',
+            'Start Date',
+            'Time Out / Break',
+            'Role',
+            'Reference check 1',
+            'Reference check 2',
+            'Photo Consent',
+            'Induction',
+            'Birthday Updated To Do',
+            '6th Month Mug',
+            'Days remaining',
+            'Award created',
+            'Award Given',
+            '12th Month T-shirt',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            '2 year hoodie',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            '3 year gift bag',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            '4 year water bottle',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            '5 year gift tag',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            '6 year gift tag',
+            'Days remaining',
+            'Award Created',
+            'Award Given',
+            'Food Hygiene Lvl 2 date',
+            'Food Hygiene Lvl 3',
+            'Naloxone Training',
+            'Safeguarding Training',
+            'First Aid Training',
+            'Other training',
+            'Supervision 1',
+            'Supervision 2',
+            'Extra Information'
+        ];        
+
+        let mismatchedHeaders = []
+        expectedHeaders.forEach(expectedHeader => {
+            const found = actualHeaders.some(actualHeader =>
+                actualHeader.toLowerCase() === expectedHeader.toLowerCase()
+            )
+            if (!found) {
+                mismatchedHeaders.push(expectedHeader)
+            }
+        });
+
+        if (mismatchedHeaders.length > 0) {
+            throw new Error(`CSV headers do not match the expected format. Mismatched Headers: ${mismatchedHeaders.join(', ')}`);
+        }
+
+        // Remove the header row
+        records.shift()
+
+        const results = await volunteerController.importVolunteers(records)
+        if (results.canImport) {
+            res.status(HttpStatusCode.Ok).send(results)
+        } else {
+            res.status(HttpStatusCode.Ok).send(results)
+        }
     } catch (err) {
         if (err.status && err.message) {
             res.status(err.status).send(err.message)
@@ -146,7 +240,7 @@ router.get('/training/upcoming/:daysThreshold?', async (req, res) => {
 
 // Add the cutoff dates to the volunteer object
 router.get('/awards/upcoming/:daysThreshold?', async (req, res) => {
-    try {  
+    try {
         let daysThreshold = req.params.daysThreshold === undefined ? 0 : req.params.daysThreshold
         const result = await volunteerController.findUpcomingAwards(daysThreshold)
         res.status(HttpStatusCode.Ok).send(result)

@@ -28,6 +28,18 @@ const trainingSchema = new mongoose.Schema({
   },
 });
 
+trainingSchema.pre('save', async function (next) {
+  try {
+    const existingTraining = await this.model('Training').findOne({ name: { $regex: new RegExp(`^${this.name}$`, 'i') } });
+    if (existingTraining) {
+      throw new Error('Training with the same name already exists.');
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 trainingSchema.pre('findOneAndUpdate', async function (next) {
   try {
     const docToUpdate = await this.model.findOne(this.getQuery());
@@ -38,6 +50,13 @@ trainingSchema.pre('findOneAndUpdate', async function (next) {
 
     // Apply the update to a temporary document to avoid modifying the original document
     const updatedFields = { ...docToUpdate.toObject(), ...this.getUpdate() };
+
+    if (this._update.name !== docToUpdate.name) {
+      const existingTraining = await this.model.findOne({ name: { $regex: new RegExp(`^${this._update.name}$`, 'i') } })
+      if (existingTraining) {
+        throw new Error('Training with the same name already exists.');
+      }
+    }
 
     // Create a new document instance with the updated fields
     const updatedDoc = new this.model(updatedFields);

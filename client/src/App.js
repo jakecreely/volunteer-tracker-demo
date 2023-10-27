@@ -1,5 +1,5 @@
-import {Application} from './Application'
-import {BrowserRouter} from 'react-router-dom'
+import { Application } from './Application'
+import { BrowserRouter } from 'react-router-dom'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 
 function App() {
@@ -21,9 +21,9 @@ function App() {
 
   return (
     <BrowserRouter>
-        <ThemeProvider theme={theme}>
+      <ThemeProvider theme={theme}>
         <Application />
-        </ThemeProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
