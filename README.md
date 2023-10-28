@@ -1,40 +1,67 @@
 # Volunteer Tracker Demo
 
-This is a functional demo of a project I built for a [local charity](https://matthewshouse.org.uk/), during my time as a volunteer. The demo showcases the basic features and functionality of the application, excluding user authentication and charity branding. It communicates with an API to update the database in real-time. The backend is built with Express, Mongoose, and MongoDB, while the frontend is built with React, Redux, and Material-UI.
+This demo showcases a project developed during my time as a volunteer for a [local charity](https://matthewshouse.org.uk/). It serves as a functional representation of the application, excluding user authentication and email notifications (which are in the production version). The backend is built with Express, Mongoose, and MongoDB, while the front end leverages React, Redux, and Material-UI.
 
-You can view the functional demo [here](https://volunteer-tracker-demo.up.railway.app). *(The database is reset and seeded every 30 mins)*
+Have a play around with the [functional demo](https://volunteer-tracker-demo.up.railway.app)! *(Please note that the database is reset and seeded every 30 minutes)*
 
-## Features
-The charity needed a more efficient way to manage their volunteers' information. The existing system required manual input and calculations to determine when certain activities, such as training, were due. The new system was designed to address these challenges and includes the following features:
+## Project Background
 
-- Users can search for upcoming information in a given number of days
-  - List of volunteers and the training they require or when training has expired.
-  - List of volunteers and the upcoming awards or overdue awards.
-  - List of volunteers with upcoming birthdays.
-  - List of volunteers with outstanding documents.
-- Create, update and delete awards, documents, roles and training.
-- Ability to add new volunteers.
-- Ability to update existing volunteers' information.
-- Archiving of volunteers who are currently not actively volunteering.
-- Viewing and filtering a list of volunteers and their information.
+During my time volunteering, I was interested in the technical side of running the charity. When speaking with the project lead Thom, we identified a significant challenge. The charity relied on manual tracking through spreadsheets, leading to inefficiencies in managing volunteer information. Working closely with Thom, I proposed and developed a system that automated these tasks, streamlining operations and ensuring reliable communication.
 
-## What I Have Learnt
-Throughout the development of this project, I gained valuable knowledge and skills in the following areas:
+### Expectations and Achievements
+**Expectations:** My primary goal was to gain hands-on experience in building a full working application from conceptualization to deployment. Initially having it be used by the charity in day-to-day operations was something I didn't think would actually happen.
 
-- Gathering client requirements and prototyping.
-- Implementing user authentication practices.
-- Designing a REST API.
-- Designing a NoSQL database.
-- Building applications with React and Redux.
-- Deploying projects to a production environment.
-- Presenting projects and gathering feedback.
+**Achievements**:Through effort and collaborative work with Thom, I've realized this goal. The application now plays an integral role in the charity's daily activities, streamlining their volunteer management processes and enhancing overall efficiency. This experience has been invaluable in shaping my proficiency in full-stack development and project deployment.
 
-Bringing a project from initial design to deployment, where it can make a positive impact, has been an incredibly rewarding experience.
+## Noteworthy Features
 
-## Next Steps
-I would like to add a notification system (mobile and/or email) that alerts the relevant users of the necssary upcoming information on a set schedule. This will allow users to avoid having to log in to check and make note.
+- **Upcoming Information Retrieval:** Enables users to efficiently search for events within a specified timeframe, including upcoming training, awards, birthdays, and outstanding documents.
+  <img width="1510" alt="Dashboard" src="https://github.com/jakecreely/volunteer-tracker-demo/assets/55953689/8a3f5e82-4e28-43de-a980-24ba2a3e7f1d">
+
+- **Flexible Management:** Users can create, update, and delete awards, documents, roles and training, allowing for easy adjustments to changing requirements. 
+  <img width="1502" alt="FlexibleManagementShorter" src="https://github.com/jakecreely/volunteer-tracker-demo/assets/55953689/849d41eb-1d0b-4bdf-9fe7-a1fe951edbcb">
+
+- **Volunteer Lifecycle Management:** Ability to add new volunteers, perform updates to existing volunteer information, and archive inactive volunteers.
+  <img width="1502" alt="EditVolunteer" src="https://github.com/jakecreely/volunteer-tracker-demo/assets/55953689/90dde7f3-0edf-41e4-b03e-1d13b8d7222a">
+
+- **Intuitive Filtering and Viewing:** Provides an interface for accessing and filtering for the required information.
+  <img width="1502" alt="Filtering" src="https://github.com/jakecreely/volunteer-tracker-demo/assets/55953689/c953a05f-9682-4304-87a9-1a09f469a8ce">
+
+- **Importing Volunteer Data:** A user-friendly process to import the volunteer data from the spreadsheet into the database, including error handling. 
+
+Additional features in the production version not demonstrated in this demo include:
+
+- **Secure User Authentication:** Robust to prevent unauthorized access to both frontend and backend including Role-Based Access Control for staff and volunteer differentiation (volunteers can only read the information).
+
+- **Email Notifications:** Scheduled communication with staff in the mailing list to communicate the upcoming information without having to access the application, leveraging Amazon SES.
+
+## Key Learnings
+
+Developing this project honed my skills and allowed me to develop new ones:
+
+- **Requirement Analysis and Prototyping:** Translating client needs into functional prototypes and obtaining feedback.
+
+- **Robust REST API Design:** API for seamless frontend-backend communication.
+
+- **Automated API Testing**: Implemented testing using Jest and Docker to ensure the reliability and functionality of the API.
+
+- **NoSQL Database Design:** Understanding MongoDB database structure, mongoose and the use cases.
+
+- **Frontend Experience:** Learning about and using React and Redux with MUI for dynamic and user-centric interfaces.
+
+- **Deployment to Production:** Successfully deploying project for real-world application. Understanding docker, environment variables and git version deployment.
+
+- **Presentation and Feedback Handling:** Continuous communication with charity staff, presenting progress and gathering valuable feedback.
+
+- **AWS SES and Task Scheduling:** AWS SES for efficient email communication and scheduling tasks for timely overview notifications and regular data backups.
+
+## Future Endeavors
+While the core functionality meets the charity's current needs, I plan to go back through the project to understand where I have gone wrong and how I can improve. Making sure to document my choices. Some of the things I have identified and would change if I started the project from scratch would be:
+- **Using TypeScript:** Managing the API responses' structure has sometimes proven challenging, potentially slowing down development. TypeScript could streamline this process.
+- **Focus on API Testing:** Writing tests ahead of time or in parallel with route development, following a Test-Driven Development approach, would have saved me time. Initially, I was eager to get the API working, but as it grew, managing it became more complex.
+- **Development Perspective:** As I started to look back through the whole project it became clear that my starting mindset was not to assume I was looking at it with fresh eyes. Going forward I will try and keep this in mind by using clear, informative component names and maintaining a consistent project structure.
 
 ## Feedback
-Any feedback that you may have is welcome. I'm always looking for ways to improve and explore different approaches.
+ Feedback is always appreciated. Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/jake-creely/).
 
-Feel free to reach out to me on [LinkedIn](https://www.linkedin.com/in/jake-creely/).
+Thank you for exploring this demo!
