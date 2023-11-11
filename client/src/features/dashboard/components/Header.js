@@ -1,7 +1,6 @@
 import { styled, Toolbar, Typography, IconButton } from '@mui/material';
 import MuiAppBar from '@mui/material/AppBar';
 import MenuIcon from '@mui/icons-material/Menu';
-import { LoginButton, LogoutButton } from '../../auth';
 import { drawerWidth } from '../utils/constants';
 
 const AppBar = styled(MuiAppBar, {
@@ -50,9 +49,8 @@ export function Header(props) {
                     noWrap
                     sx={{ flexGrow: 1 }}
                 >
-                    Matthew's House Dashboard
+                    Volunteer Management System
                 </Typography>
-                {props.isAuthenticated ? <LogoutButton /> : <LoginButton />}
             </Toolbar>
         </AppBar>
     )

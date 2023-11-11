@@ -1,13 +1,11 @@
 import { CssBaseline, Box, Toolbar } from '@mui/material';
 import { Copyright } from '../../../components/Copyright';
-import { useAuth0 } from '@auth0/auth0-react';
 import { DashboardRoutes } from '../routes/DashboardRoutes';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { useState } from 'react';
 
 function DashboardContent(props) {
-  const { isAuthenticated } = useAuth0();
   const [open, setOpen] = useState(true);
   const toggleDrawer = () => {
     setOpen(!open);
@@ -16,7 +14,7 @@ function DashboardContent(props) {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      <Header open={open} toggleDrawer={toggleDrawer} isAuthenticated={isAuthenticated} />
+      <Header open={open} toggleDrawer={toggleDrawer} />
       <Sidebar open={open} toggleDrawer={toggleDrawer} />
       <Box
         sx={{
