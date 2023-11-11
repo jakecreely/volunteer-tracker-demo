@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose')
 const Training = require('../models/Training');
 const { HttpStatusCode } = require('axios');
+const trainingController = require('../controllers/trainingController');
 
 
 router.get('/', async (req, res) => {
@@ -81,6 +82,16 @@ router.delete('/:id', async (req, res) => {
         } else {
             res.status(HttpStatusCode.InternalServerError).send(err.message)
         }
+    }
+})
+
+router.get('/:id/volunteer-usage', async (req, res) => {
+    try {
+        const id = req.params['id']
+        const trainingsWithUsage = await trainingController.getVolunteersUsage(id)
+        res.status(HttpStatusCode.Ok).send(trainingsWithUsage)
+    } catch (err) {
+        res.status(HttpStatusCode.InternalServerError).send(err.message)
     }
 })
 

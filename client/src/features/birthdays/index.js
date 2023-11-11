@@ -1,1 +1,1 @@
-export * from './components/BirthdayCard'
+export * from './components/UpcomingBirthdayCard'

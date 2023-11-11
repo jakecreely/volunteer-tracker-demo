@@ -1,18 +1,14 @@
-import { Box, Grid } from "@mui/material";
-import { Route, Routes } from "react-router-dom";
-import CreateTrainingForm from "./CreateTrainingForm";
-import UpdateTrainingForm from "./UpdateTrainingForm";
-import DisplayTrainingCard from "./DisplayTrainingCard"
+import { Grid } from "@mui/material"
+import { ContentLayout } from "../../../components/ContentLayout"
 
-export default function TrainingContainer(props) {
-
+export const TrainingContainer = ({ children }) => {
     return (
-        <Box p={3}>
-            <Routes>
-                <Route path="/" element={<DisplayTrainingCard {...props} />} />
-                <Route path="/update/:id" element={<UpdateTrainingForm {...props} />} />
-                <Route path="/create" element={<CreateTrainingForm {...props} />} />
-            </Routes>
-        </Box>
+        <ContentLayout>
+            <Grid container justifyContent={'center'} >
+                <Grid item xs={12} md={10} lg={8}>
+                    {children}
+                </Grid>
+            </Grid>
+        </ContentLayout>
     )
 }

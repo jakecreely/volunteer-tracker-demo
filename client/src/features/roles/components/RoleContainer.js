@@ -1,22 +1,14 @@
-import { Box } from "@mui/material";
-import { DisplayRoleCard } from "./DisplayRoleCard";
-import { CreateRoleForm } from "./CreateRoleForm";
-import { UpdateRoleForm } from "./UpdateRoleForm";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Grid } from "@mui/material"
+import { ContentLayout } from "../../../components/ContentLayout"
 
-export function RoleContainer(props) {
-    const navigate = useNavigate()
-    const handleSuccess = () => {
-        navigate('/dashboard/roles?created=true')
-    }
-
+export const RoleContainer = ({ children }) => {
     return (
-        <Box p={3}>
-            <Routes>
-                <Route path="/" element={<DisplayRoleCard {...props} />} />
-                <Route path="/update/:id" element={<UpdateRoleForm {...props} />} />
-                <Route path="/create" element={<CreateRoleForm {...props} handleSuccess={() => handleSuccess()} />} />
-            </Routes>
-        </Box>
+        <ContentLayout>
+            <Grid container justifyContent={'center'} >
+                <Grid item xs={12} md={4}>
+                    {children}
+                </Grid>
+            </Grid>
+        </ContentLayout>
     )
 }

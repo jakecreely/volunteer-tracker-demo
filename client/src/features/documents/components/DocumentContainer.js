@@ -1,17 +1,14 @@
-import { Box } from "@mui/material";
-import DisplayDocumentCard from "./DisplayDocumentCard";
-import UpdateDocumentForm from "./UpdateDocumentForm";
-import CreateDocumentForm from "./CreateDocumentForm";
-import { Route, Routes } from "react-router-dom";
+import { Grid } from "@mui/material"
+import { ContentLayout } from "../../../components/ContentLayout"
 
-export default function DocumentContainer(props) {
+export const DocumentContainer = ({ children }) => {
     return (
-        <Box p={3}>
-            <Routes>
-                <Route path="/" element={<DisplayDocumentCard {...props} />} />
-                <Route path="/update/:id" element={<UpdateDocumentForm {...props} />} />
-                <Route path="/create" element={<CreateDocumentForm {...props} />} />
-            </Routes>
-        </Box>
+        <ContentLayout>
+            <Grid container justifyContent={'center'}>
+                <Grid item xs={12} md={4}>
+                    {children}
+                </Grid>
+            </Grid>
+        </ContentLayout>
     )
 }

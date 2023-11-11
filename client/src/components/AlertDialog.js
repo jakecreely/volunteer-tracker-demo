@@ -1,31 +1,25 @@
 import * as React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle} from '@mui/material';
 
-export default function AlertDialog(props) {
-
+export function AlertDialog({title, message, closeMessage, open, setOpen}) {
   return (
     <React.Fragment>
       <Dialog
-        open={props.open}
-        onClose={props.setOpen}
+        open={open}
+        onClose={setOpen}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
         <DialogTitle id="alert-dialog-title">
-          {props.title}
+          {title}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            {props.message}
+            {message}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={props.setOpen}>{props.closeMessage}</Button>
+          <Button onClick={setOpen}>{closeMessage}</Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

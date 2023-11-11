@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose')
 const Award = require('../models/Award');
 const { HttpStatusCode } = require('axios');
+const awardController = require('../controllers/awardController');
 
 router.get('/', async (req, res) => {
     try {
@@ -90,6 +91,16 @@ router.get('/auto-fill/:startDate&:breakDuration', async (req, res) => {
         res.status(HttpStatusCode.Ok).send(filledAwards)
     }
     catch (err) {
+        res.status(HttpStatusCode.InternalServerError).send(err.message)
+    }
+})
+
+router.get('/:id/volunteer-usage', async (req, res) => {
+    try {
+        const id = req.params['id']
+        const awardsWithUsage = await awardController.getVolunteersUsage(id)
+        res.status(HttpStatusCode.Ok).send(awardsWithUsage)
+    } catch (err) {
         res.status(HttpStatusCode.InternalServerError).send(err.message)
     }
 })

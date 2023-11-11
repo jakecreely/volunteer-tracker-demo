@@ -64,9 +64,4 @@ const roleSlice = createSlice({
     },
 })
 
-// Check the usage of selectors
-const selectRoles = state => state.roles.roles
-
-const selectRoleById = (state, roleId) => state.roles.roles.find(role => role.id === roleId)
-
 export default roleSlice.reducer

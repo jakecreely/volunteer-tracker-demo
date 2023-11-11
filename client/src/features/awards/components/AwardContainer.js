@@ -1,17 +1,14 @@
-import { Box } from "@mui/material";
-import { Route, Routes } from "react-router-dom";
-import CreateAwardForm from "./CreateAwardForm";
-import DisplayAwardCard from "./DisplayAwardsCard";
-import UpdateAwardForm from "./UpdateAwardForm";
+import { Grid } from "@mui/material"
+import { ContentLayout } from "../../../components/ContentLayout"
 
-export default function AwardContainer(props) {
+export const AwardContainer = ({ children }) => {
     return (
-        <Box p={3}>
-            <Routes>
-                <Route path="/" element={<DisplayAwardCard {...props} />} />
-                <Route path="/update/:id" element={<UpdateAwardForm {...props} />} />
-                <Route path="/create" element={<CreateAwardForm {...props} />} />
-            </Routes>
-        </Box>
+        <ContentLayout>
+            <Grid container justifyContent={'center'}>
+                <Grid item xs={12} md={6} lg={5}>
+                    {children}
+                </Grid>
+            </Grid>
+        </ContentLayout>
     )
 }

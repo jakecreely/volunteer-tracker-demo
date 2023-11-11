@@ -3,10 +3,11 @@ const router = express.Router();
 const mongoose = require('mongoose')
 const Role = require('../models/Role');
 const { HttpStatusCode } = require('axios');
+const roleController = require('../controllers/roleController');
 
 router.get('/', async (req, res) => {
     try {
-        let roles = await Role.find({}).sort({ name: 1 })
+        const roles = await Role.find({}).sort({ name: 1 })
         res.status(HttpStatusCode.Ok).send(roles)
     } catch (err) {
         res.status(HttpStatusCode.InternalServerError).send(err.message)
@@ -76,6 +77,16 @@ router.delete('/:id', async (req, res) => {
         } else {
             res.status(HttpStatusCode.InternalServerError).send(err.message)
         }
+    }
+})
+
+router.get('/:id/volunteer-usage', async (req, res) => {
+    try {
+        const id = req.params['id']
+        const rolesWithUsage = await roleController.getVolunteersUsage(id)
+        res.status(HttpStatusCode.Ok).send(rolesWithUsage)
+    } catch (err) {
+        res.status(HttpStatusCode.InternalServerError).send(err.message)
     }
 })
 

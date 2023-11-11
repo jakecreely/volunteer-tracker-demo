@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useSearchParams } from "react-router-dom";
-import Dashboard from './features/dashboard/components/Dashboard'
+import { Dashboard } from '../src/features/dashboard';
 import { NotFoundPage } from './components/NotFoundPage';
 import { Card, Grid, LinearProgress } from '@mui/material';
 

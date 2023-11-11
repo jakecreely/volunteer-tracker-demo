@@ -1,18 +1,14 @@
-import { Box } from "@mui/material";
-import { Route, Routes } from "react-router-dom";
-import DisplayMailingListCard from "./DisplayMailingListCard"
-import UpdateMailingListForm from "./UpdateMailingListForm";
-import CreateMailingListForm from "./CreateMailingListForm";
+import { Grid } from "@mui/material"
+import { ContentLayout } from "../../../components/ContentLayout"
 
-export default function MailingListContainer(props) {
-
+export const MailingListContainer = ({ children }) => {
     return (
-        <Box p={3}>
-            <Routes>
-                <Route path="/" element={<DisplayMailingListCard {...props} />} />
-                <Route path="/update/:id" element={<UpdateMailingListForm {...props} />} />
-                <Route path="/add" element={<CreateMailingListForm {...props} />} />
-            </Routes>
-        </Box>
+        <ContentLayout>
+            <Grid container justifyContent={'center'}>
+                <Grid item xs={12} md={10} lg={8}>
+                    {children}
+                </Grid>
+            </Grid>
+        </ContentLayout>
     )
 }

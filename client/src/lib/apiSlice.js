@@ -78,7 +78,7 @@ export const apiSlice = createApi({
                 method: 'PUT',
                 body: updatedVolunteer
             }),
-            invalidatesTags: ['Volunteer']
+            invalidatesTags: ['Volunteer', 'Role', 'Training', 'Award', 'Document'] // Role is used to for the volunteer usage on the roles page
         }),
         deleteVolunteer: builder.mutation({
             query: (id) => ({
@@ -102,6 +102,10 @@ export const apiSlice = createApi({
         }),
         getAwardById: builder.query({
             query: (id) => `/awards/${id}`,
+            providesTags: ['Award']
+        }),
+        getAwardsWithVolunteerUsage: builder.query({
+            query: (id) => `/awards/${id}/volunteer-usage`,
             providesTags: ['Award']
         }),
         addAward: builder.mutation({
@@ -138,6 +142,10 @@ export const apiSlice = createApi({
             query: () => '/training',
             providesTags: ['Training']
         }),
+        getTrainingWithVolunteerUsage: builder.query({
+            query: (id) => `/training/${id}/volunteer-usage`,
+            providesTags: ['Training']
+        }),
         getTrainingById: builder.query({
             query: (id) => `/training/${id}`,
             providesTags: ['Training']
@@ -168,6 +176,10 @@ export const apiSlice = createApi({
         // Roles Endpoints
         getRoles: builder.query({
             query: () => '/roles',
+            providesTags: ['Role']
+        }),
+        getRolesWithVolunteerUsage: builder.query({
+            query: (id) => `/roles/${id}/volunteer-usage`,
             providesTags: ['Role']
         }),
         getRoleById: builder.query({
@@ -204,6 +216,10 @@ export const apiSlice = createApi({
         }),
         getDocumentById: builder.query({
             query: (id) => `/documents/${id}`,
+            providesTags: ['Document']
+        }),
+        getDocumentWithVolunteerUsage: builder.query({
+            query: (id) => `/documents/${id}/volunteer-usage`,
             providesTags: ['Document']
         }),
         addDocument: builder.mutation({
@@ -284,6 +300,7 @@ export const {
     // Award Endpoints
     useGetAwardsQuery,
     useGetAwardByIdQuery,
+    useGetAwardsWithVolunteerUsageQuery,
     useAddAwardMutation,
     useUpdateAwardMutation,
     useDeleteAwardMutation,
@@ -292,12 +309,14 @@ export const {
     // Training Endpoints
     useGetTrainingQuery,
     useGetTrainingByIdQuery,
+    useGetTrainingWithVolunteerUsageQuery,
     useAddTrainingMutation,
     useUpdateTrainingMutation,
     useDeleteTrainingMutation,
 
     // Roles Endpoints
     useGetRolesQuery,
+    useGetRolesWithVolunteerUsageQuery,
     useGetRoleByIdQuery,
     useAddRoleMutation,
     useUpdateRoleMutation,
@@ -306,6 +325,7 @@ export const {
     // Documents Endpoints
     useGetDocumentsQuery,
     useGetDocumentByIdQuery,
+    useGetDocumentWithVolunteerUsageQuery,
     useAddDocumentMutation,
     useUpdateDocumentMutation,
     useDeleteDocumentMutation,

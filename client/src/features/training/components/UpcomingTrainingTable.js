@@ -1,16 +1,15 @@
-import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, TableHead, TableRow, TableCell, TableBody, Button, TablePagination, Skeleton } from '@mui/material'
 import { SortableCell } from '../../../components/SortableCell';
+import { Fragment, useEffect, useState } from 'react';
 
-export default function UpcomingTrainingTable(props) {
+export function UpcomingTrainingTable(props) {
     const navigate = useNavigate()
     const moment = require('moment');
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
 
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
-
-    React.useEffect(() => {
+    useEffect(() => {
         setPage(0)
     }, [props.filteredData])
 
@@ -39,7 +38,7 @@ export default function UpcomingTrainingTable(props) {
     }
 
     return (
-        <React.Fragment>
+        <Fragment>
             <Table size="small">
                 <TableHead>
                     <TableRow>
@@ -50,7 +49,6 @@ export default function UpcomingTrainingTable(props) {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {/* TODO: Include isArchived in api response and add check here so they are not included */}
                     {props.filteredData && props.filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage,).map((elem, index) => (
                         <TableRow key={elem.volunteer._id + index}>
                             <TableCell width={'35%'} component="th" scope="row">
@@ -89,6 +87,6 @@ export default function UpcomingTrainingTable(props) {
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
             />
-        </React.Fragment>
+        </Fragment>
     )
 }
