@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Table, TableHead, TableRow, TableCell, TableBody, Button, TablePagination, Skeleton, Box } from '@mui/material'
 import { SortableCell } from '../../../components/SortableCell';
 
-export default function UpcomingAwardsTable(props) {
+export function UpcomingAwardsTable(props) {
     const navigate = useNavigate()
     const moment = require('moment');
 

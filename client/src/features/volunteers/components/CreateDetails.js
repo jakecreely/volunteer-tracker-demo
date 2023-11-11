@@ -2,15 +2,9 @@ import { Select, MenuItem, FormControlLabel, Checkbox, TextField, FormLabel, For
 import { Box } from '@mui/system';
 import React from 'react';
 import { useAutoFillAwardsMutation } from '../../../lib/apiSlice';
-<<<<<<<< HEAD:client/src/features/volunteers/components/CreateDetailCard.js
-import { DocumentCard } from './DocumentDetailCard';
-import { TrainingCard } from './TrainingDetailCard';
-import { AwardCard } from './AwardDetailCard';
-========
 import { DocumentCard } from './DocumentCard';
 import { TrainingCard } from './TrainingCard';
 import { AwardCard } from './AwardCard';
->>>>>>>> version2/fileStructure:client/src/features/volunteers/components/CreateDetails.js
 
 export function CreateDetails(props) {
 

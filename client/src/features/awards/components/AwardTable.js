@@ -9,7 +9,7 @@ import Paper from '@mui/material/Paper';
 import { Button } from '@mui/material';
 import { useNavigate } from "react-router-dom";
 
-export default function AwardTable(props) {
+export function AwardTable(props) {
     let navigate = useNavigate();
 
     return (

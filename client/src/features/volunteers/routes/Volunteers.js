@@ -1,21 +1,8 @@
 import React, { useEffect, useState } from "react";
-<<<<<<<< HEAD:client/src/features/volunteers/components/VolunteerContainer.js
-import { VolunteerFilterForm } from "./VolunteerFilterForm";
-import { VolunteerTable } from "./VolunteerTable";
-import Box from '@mui/material/Box';
-import { useGetRolesQuery, useGetVolunteersQuery } from "../../../lib/apiSlice";
-import { LoadingTableSkeleton } from "../../../components/LoadingTableSkeleton";
-import { Button, Grid, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-
-export function VolunteerContainer(props) {
-    const navigate = useNavigate()
-========
-import { FilterVolunteers, VolunteerFilterForm } from "../components/FilterVolunteers";
 import { useGetRolesQuery, useGetVolunteersQuery } from "../../../lib/apiSlice";
 import { ContentLayout } from "../../../components/ContentLayout";
+import { FilterVolunteers } from "../components/FilterVolunteers";
 import { VolunteersList } from "../components/VolunteersList";
->>>>>>>> version2/fileStructure:client/src/features/volunteers/routes/Volunteers.js
 
 export function Volunteers() {
     const [selectedRoles, setSelectedRoles] = useState([])
@@ -122,57 +109,6 @@ export function Volunteers() {
         setShowArchived(false)
     })
 
-<<<<<<<< HEAD:client/src/features/volunteers/components/VolunteerContainer.js
-    if (volunteerError || roleError) {
-        return <Box p={3}>Error fetching volunteers. Please try again later.</Box>
-    }
-
-    if (volunteerLoading || roleLoading) {
-        return (
-            <React.Fragment>
-                <Box p={3}>
-                    <LoadingTableSkeleton />
-                </Box>
-            </React.Fragment>
-        )
-    }
-
-    if (volunteerSuccess && roleSuccess) {
-        return (
-            <React.Fragment>
-                <Box p={3}>
-                    <VolunteerFilterForm
-                        roles={roles}
-                        selectedRoles={selectedRoles}
-                        handleSelectedRoles={(e) => handleSelectedRoles(e)}
-                        name={nameInput}
-                        showArchived={showArchived}
-                        handleNameChange={(e) => handleNameChange(e)}
-                        handleSubmit={(e) => handleSubmit(e)}
-                        handleReset={(e) => handleReset(e)}
-                        handleArchiveChange={(e) => handleArchiveChange(e)}
-                    />
-                    {
-                        filteredVolunteerData.length > 0 ?
-                            <VolunteerTable volunteers={filteredVolunteerData} />
-                            :
-                            <Grid container justifyContent={'center'}>
-                                <Grid item xs={12} md={10} lg={8}>
-                                    <Box sx={{ textAlign: 'center', p: 2 }}>
-                                        <Typography variant='body'>No Volunteers. Why not add one!</Typography>
-                                        <br /> <br />
-                                        <Button variant="outlined" onClick={() => navigate("/dashboard/volunteers/create")}>
-                                            Create Volunteer
-                                        </Button>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                    }
-                </Box>
-            </React.Fragment>
-        )
-    }
-========
     return (
         <ContentLayout>
             <FilterVolunteers
@@ -197,6 +133,4 @@ export function Volunteers() {
             />
         </ContentLayout>
     )
->>>>>>>> version2/fileStructure:client/src/features/volunteers/routes/Volunteers.js
-
 }

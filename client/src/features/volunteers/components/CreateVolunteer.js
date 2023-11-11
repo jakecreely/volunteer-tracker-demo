@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button, Container, Box, FormControl, Card, Grid, CardContent, Snackbar, Alert } from "@mui/material"
-<<<<<<<< HEAD:client/src/features/volunteers/components/CreateVolunteerForm.js
-import { CreateCard } from "./CreateCard"
-import { CreateDetailCard } from "./CreateDetailCard"
-========
 import { CreateDetailCard, CreateDetails } from "./CreateDetails"
->>>>>>>> version2/fileStructure:client/src/features/volunteers/components/CreateVolunteer.js
 import { useAddVolunteerMutation, useGetAwardsQuery, useGetDocumentsQuery, useGetRolesQuery, useGetTrainingQuery } from "../../../lib/apiSlice"
 import { ProfileSkeleton } from "./ProfileSkeleton"
 import { StatusSnackbar } from "../../../components/StatusSnackbar"
@@ -333,11 +328,7 @@ export function CreateVolunteer(props) {
                 <Card >
                     <CardContent>
                         <FormControl>
-<<<<<<<< HEAD:client/src/features/volunteers/components/CreateVolunteerForm.js
-                            <CreateDetailCard
-========
                             <CreateDetails
->>>>>>>> version2/fileStructure:client/src/features/volunteers/components/CreateVolunteer.js
                                 fetchedAwards={fetchedAwards}
                                 selectedAwards={selectedAwards}
                                 handleSelectedAwardChange={(e) => handleSelectedAwardChange(e)}
